@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # YKK - KPI Management
 
 ## Overview
@@ -372,6 +371,3 @@ After upgrading, verify the following menus:
 - `KPI Management > Configuration > Employees`
 - `KPI Management > Configuration > Departments`
 - `KPI Management > Configuration > Job Positions`
-=======
-# ykk_kpi
-1aeefba72bdec8ee3b181776e929dfe8a70c55e9

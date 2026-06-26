@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_salary_calculate_form" model="ir.ui.view">
+        <field name="name">ykk.kpi.salary.calculate.form</field>
+        <field name="model">ykk.kpi.salary.calculate</field>
+        <field name="arch" type="xml">
+            <form string="Salary Calculate">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                        class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Done" type="object"
+                        class="btn-primary" invisible="state != 'inprocess'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                        invisible="state not in ('draft', 'inprocess')"/>
+                    <button name="action_draft" string="Reset to Draft" type="object"
+                        invisible="state != 'cancel'"/>
+                    <button name="action_export_excel" string="Excel New Salary" type="object"
+                        class="btn-secondary" invisible="state not in ('inprocess', 'done')"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,inprocess,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="period_id"/>
+                            <field name="responsible_id"/>
+                            <field name="create_date" string="Create Date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="increase_percent"/>
+                            <field name="over_salary_range_percent"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Salary Calculate">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="employee_id"/>
+                                    <field name="level_id" optional="show"/>
+                                    <field name="department_id" optional="show"/>
+                                    <field name="employee_type" optional="show"/>
+                                    <field name="current_salary" optional="show"/>
+                                    <field name="is_over_range" column_invisible="1"/>
+                                    <field name="effective_increase_percent" readonly="1"
+                                        decoration-danger="is_over_range" optional="show"/>
+                                    <field name="increase_new_salary_year" readonly="1" optional="show"/>
+                                    <field name="merit" optional="show"/>
+                                    <field name="att" optional="show"/>
+                                    <field name="grade_id" optional="show"/>
+                                    <field name="plus_minus" readonly="1" optional="show"/>
+                                    <field name="cal_by_grade" readonly="1" optional="show"/>
+                                    <field name="cal_by_time" readonly="1" optional="show"/>
+                                    <field name="over_leave_day" optional="show"/>
+                                    <field name="over_leave_baht" readonly="1" optional="show"/>
+                                    <field name="att_amount" readonly="1" optional="show"/>
+                                    <field name="increase" readonly="1" optional="show"/>
+                                    <field name="new_salary" readonly="1" optional="show"/>
+                                    <field name="new_salary_month" readonly="1" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_salary_calculate_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.salary.calculate.list</field>
+        <field name="model">ykk.kpi.salary.calculate</field>
+        <field name="arch" type="xml">
+            <list string="Salary Calculate">
+                <field name="name"/>
+                <field name="period_id" optional="show"/>
+                <field name="responsible_id" optional="show"/>
+                <field name="create_date" optional="show"/>
+                <field name="state" widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state == 'inprocess'"
+                    decoration-success="state == 'done'"
+                    decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_salary_calculate_search" model="ir.ui.view">
+        <field name="name">ykk.kpi.salary.calculate.search</field>
+        <field name="model">ykk.kpi.salary.calculate</field>
+        <field name="arch" type="xml">
+            <search string="Salary Calculate">
+                <field name="name"/>
+                <field name="period_id"/>
+                <field name="responsible_id"/>
+                <separator/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="inprocess" string="In Process" domain="[('state', '=', 'inprocess')]"/>
+                <filter name="done" string="Done" domain="[('state', '=', 'done')]"/>
+                <filter name="cancel" string="Cancel" domain="[('state', '=', 'cancel')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_period" string="Period" context="{'group_by': 'period_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_salary_calculate" model="ir.actions.act_window">
+        <field name="name">Salary Calculate</field>
+        <field name="res_model">ykk.kpi.salary.calculate</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Salary Calculate document.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_calculate"
+        name="Calculate"
+        parent="menu_ykk_kpi_root"
+        sequence="30"/>
+
+    <menuitem id="menu_ykk_kpi_salary_calculate"
+        name="Salary Calculate"
+        parent="menu_ykk_kpi_calculate"
+        action="action_salary_calculate"
+        sequence="10"/>
+
+</odoo>

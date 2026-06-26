@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_period_search" model="ir.ui.view">
+        <field name="name">ykk.kpi.period.search</field>
+        <field name="model">ykk.kpi.period</field>
+        <field name="arch" type="xml">
+            <search string="Periods">
+                <field name="name"/>
+                <field name="period_type"/>
+                <separator/>
+                <filter string="Start Date" name="start_date" date="start_date"/>
+                <filter string="End Date" name="end_date" date="end_date"/>
+                <separator/>
+                <filter name="is_end_period" string="End Period" domain="[('is_end_period', '=', True)]"/>
+                <separator/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_period_type" string="Period Type" context="{'group_by': 'period_type'}"/>
+                    <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_period_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.period.list</field>
+        <field name="model">ykk.kpi.period</field>
+        <field name="arch" type="xml">
+            <list string="Periods" sample="1" editable="bottom" multi_edit="1">
+                <field name="name"/>
+                <field name="is_end_period"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="period_type"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_kpi_period" model="ir.actions.act_window">
+        <field name="name">Periods</field>
+        <field name="res_model">ykk.kpi.period</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Period.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_period"
+        name="Periods"
+        parent="menu_ykk_kpi_configuration"
+        action="action_kpi_period"
+        sequence="50"/>
+</odoo>
