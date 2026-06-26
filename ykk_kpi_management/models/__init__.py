@@ -5,9 +5,13 @@ from . import kpi_group_position
 from . import kpi_level
 from . import kpi_period
 from . import department_kpi
+from . import department_kpi_update
 from . import annual_kpi
 from . import kpi_template
+from . import running_sequence
 from . import hr_employee
 from . import res_config_settings
 from . import salary_calculate
 from . import bonus_calculate
+from . import relative_adjustment_group
+from . import kpi_grade_extend

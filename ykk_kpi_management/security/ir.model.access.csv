@@ -46,3 +46,5 @@ access_ykk_kpi_bonus_calculate_user,ykk.kpi.bonus.calculate user,model_ykk_kpi_b
 access_ykk_kpi_bonus_calculate_admin,ykk.kpi.bonus.calculate administrator,model_ykk_kpi_bonus_calculate,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_bonus_calculate_line_user,ykk.kpi.bonus.calculate.line user,model_ykk_kpi_bonus_calculate_line,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_bonus_calculate_line_admin,ykk.kpi.bonus.calculate.line administrator,model_ykk_kpi_bonus_calculate_line,group_ykk_kpi_admin,1,1,1,1
+access_ykk_kpi_relative_adjustment_group_user,ykk.kpi.relative.adjustment.group user,model_ykk_kpi_relative_adjustment_group,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_relative_adjustment_group_admin,ykk.kpi.relative.adjustment.group administrator,model_ykk_kpi_relative_adjustment_group,group_ykk_kpi_admin,1,1,1,1
