@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_relative_adjustment_group_search" model="ir.ui.view">
+        <field name="name">ykk.kpi.relative.adjustment.group.search</field>
+        <field name="model">ykk.kpi.relative.adjustment.group</field>
+        <field name="arch" type="xml">
+            <search string="Relative Adjustment Group">
+                <field name="name"/>
+                <field name="grade_ids"/>
+                <separator/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_relative_adjustment_group_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.relative.adjustment.group.list</field>
+        <field name="model">ykk.kpi.relative.adjustment.group</field>
+        <field name="arch" type="xml">
+            <list string="Relative Adjustment Group" sample="1" editable="bottom" default_order="sequence">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="grade_ids" widget="many2many_tags"/>
+                <field name="distribution"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_relative_adjustment_group" model="ir.actions.act_window">
+        <field name="name">Relative Adjustment Group</field>
+        <field name="res_model">ykk.kpi.relative.adjustment.group</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Relative Adjustment Group.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_relative_adjustment_group"
+        name="Relative Adjustment Group"
+        parent="menu_ykk_kpi_configuration"
+        action="action_relative_adjustment_group"
+        sequence="110"/>
+
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_grade_list_adjustment_score" model="ir.ui.view">
+        <field name="name">ykk.kpi.grade.list.adjustment.score</field>
+        <field name="model">ykk.kpi.grade</field>
+        <field name="inherit_id" ref="ykk_kpi_management.view_ykk_kpi_grade_list"/>
+        <field name="arch" type="xml">
+            <field name="grade_score" position="after">
+                <field name="adjustment_score"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

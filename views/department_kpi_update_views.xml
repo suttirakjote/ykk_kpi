@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_department_kpi_form_update" model="ir.ui.view">
+        <field name="name">ykk.kpi.department.kpi.form.update</field>
+        <field name="model">ykk.kpi.department.kpi</field>
+        <field name="inherit_id" ref="ykk_kpi_management.view_ykk_kpi_department_kpi_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='annual_id']" position="replace">
+                <label for="annual_id"/>
+                <div class="o_row">
+                    <field name="annual_id" nolabel="1" options="{'no_create': True}"/>
+                    <button name="action_update_from_annual" type="object"
+                        string="update" class="btn-secondary btn-sm"
+                        invisible="not annual_id"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
