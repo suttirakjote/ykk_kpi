@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Adjustment menu placed under the KPI Management app, right after Evaluate -->
+    <menuitem id="menu_kpi_adjustment_root" name="Adjustment"
+              parent="ykk_kpi_management.menu_ykk_kpi_root"
+              sequence="15"/>
+
+    <menuitem id="menu_kpi_adjustment" name="Adjustments"
+              parent="menu_kpi_adjustment_root" action="action_kpi_adjustment"
+              sequence="10"/>
+    <menuitem id="menu_kpi_history" name="Grade History"
+              parent="menu_kpi_adjustment_root" action="action_kpi_grade_history"
+              sequence="30"/>
+</odoo>

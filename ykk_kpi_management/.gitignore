@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Editors / IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs / temp
+*.log
+*.tmp
+
+# Claude Code local settings
+.claude/

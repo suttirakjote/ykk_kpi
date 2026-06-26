@@ -36,7 +36,21 @@
         "views/hr_views.xml",
         "views/hr_employee_views.xml",
         "views/res_config_settings_views.xml",
+        "views/kpi_adjustment_views.xml",
+        "views/kpi_grade_history_views.xml",
+        "views/adjustment_integration_views.xml",
+        "views/adjustment_menus.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "ykk_kpi_management/static/src/scss/grade_grid.scss",
+            "ykk_kpi_management/static/src/scss/grade_board.scss",
+            "ykk_kpi_management/static/src/js/grade_grid_field.js",
+            "ykk_kpi_management/static/src/js/grade_board_field.js",
+            "ykk_kpi_management/static/src/xml/grade_grid_field.xml",
+            "ykk_kpi_management/static/src/xml/grade_board_field.xml",
+        ],
+    },
     "application": True,
     "installable": True,
 }

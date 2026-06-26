@@ -1,0 +1,175 @@
+.o_kpi_board_root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+
+    // ----- TOOLBAR -----
+    .o_kpi_board_toolbar {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    // ----- ONE BLOCK PER DEPARTMENT: summary (left) + columns (right) -----
+    .o_kpi_dept_block {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    // ----- SUMMARY MATRIX (3 color groups x 3 metrics) -----
+    .o_kpi_summary_matrix {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+
+        th, td {
+            border: 1px solid #b0b0b0;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th { background-color: #f5f5f5; color: #000; }
+
+        // คอลัมน์ป้ายชื่อ (Number of people / Distribution / Average)
+        th:first-child,
+        .o_kpi_sum_label { width: 200px; text-align: left; }
+
+        // โทนพาสเทล สบายตา
+        .o_kpi_sum_white { background-color: #ffffff; color: #000000; }
+        .o_kpi_sum_blue  { background-color: #cfe0f7; color: #1f3a5f; }
+        .o_kpi_sum_red   { background-color: #f8d4d4; color: #7a2e2e; }
+    }
+
+    // ----- SUMMARY TABLE (left) -----
+    .o_kpi_board_table {
+        flex: 0 0 auto;
+        width: 460px;
+        border-collapse: collapse;
+
+        // when collapsed only the Department column remains -> make it narrow
+        &.o_kpi_summary_collapsed {
+            width: 150px;
+        }
+
+        th, td {
+            border: 1px solid #cfcfcf;
+            padding: 6px 10px;
+        }
+        th { background-color: #f5f5f5; }
+
+        .o_kpi_dept_col { width: 150px; }
+
+        // merged department cell spanning all employees of the department
+        .o_kpi_dept_cell {
+            vertical-align: middle;
+            text-align: center;
+            background-color: #fafafa;
+            font-size: 14px;
+        }
+
+        .o_kpi_row_moved td:not(.o_kpi_dept_cell) {
+            color: #c0392b;
+            font-weight: bold;
+        }
+    }
+
+    // ----- GRADE COLUMNS: 5 equal columns that always fit the width -----
+    .o_kpi_board_columns {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        flex: 1 1 auto;
+        min-width: 0;
+        align-items: start;
+    }
+
+    .o_kpi_board_col {
+        min-width: 0;
+        border: 1px solid #cfcfcf;
+        border-radius: 4px;
+        background-color: #fafafa;
+        display: flex;
+        flex-direction: column;
+        min-height: 110px;
+
+        &.o_kpi_col_dragover {
+            background-color: #eef6ff;
+            border-color: #875a7b;
+        }
+    }
+
+    .o_kpi_col_header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: bold;
+        padding: 8px;
+        border-bottom: 1px solid #cfcfcf;
+        background-color: #f0f0f0;
+
+        .o_kpi_col_count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 11px;
+            background-color: #875a7b;
+            color: #fff;
+            font-size: 12px;
+        }
+    }
+
+    .o_kpi_col_body {
+        padding: 8px;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-y: auto;
+    }
+
+    .o_kpi_card {
+        background-color: #ffffff;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: grab;
+        text-align: center;
+        user-select: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &:active { cursor: grabbing; }
+
+        &.o_kpi_card_moved {
+            background-color: #f4a9a0;
+            color: #c0392b;
+            font-weight: bold;
+            border-color: #e08b80;
+        }
+
+        &.o_kpi_card_dragging { opacity: 0.4; }
+    }
+
+    // ----- FULL SCREEN -----
+    &:fullscreen,
+    &.o_kpi_fullscreen {
+        background-color: #ffffff;
+        padding: 16px;
+        box-sizing: border-box;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}

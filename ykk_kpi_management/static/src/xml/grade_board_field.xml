@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ykk_kpi_management.GradeBoard">
+        <div class="o_kpi_board_root" t-ref="root"
+             t-att-class="state.fullscreen ? 'o_kpi_fullscreen' : ''">
+
+            <!-- TOOLBAR -->
+            <div class="o_kpi_board_toolbar">
+                <button class="btn btn-sm btn-secondary"
+                        t-on-click="() => this.toggleSummary()">
+                    <t t-if="state.showSummary">Hide Summary</t>
+                    <t t-else="">Show Summary</t>
+                </button>
+                <button class="btn btn-sm btn-secondary"
+                        t-on-click="() => this.toggleFullscreen()">
+                    <t t-if="state.fullscreen">Exit Full Screen</t>
+                    <t t-else="">Full Screen</t>
+                </button>
+            </div>
+
+            <!-- SUMMARY MATRIX: 3 color groups x (Number of people / Distribution / Average)
+                 ตรึงไว้เสมอ - ปุ่ม Hide Summary ไม่มีผลกับส่วนนี้ -->
+            <table class="o_kpi_summary_matrix table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <t t-foreach="adjustmentGroups" t-as="grp" t-key="grp.id">
+                            <th class="text-center"><t t-esc="grp.board_label"/></th>
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="summaryGroups" t-as="group" t-key="group.key">
+                        <t t-foreach="summaryMetrics" t-as="metric" t-key="metric">
+                            <tr t-att-class="group.className">
+                                <td class="o_kpi_sum_label"><t t-esc="metric"/></td>
+                                <t t-foreach="adjustmentGroups" t-as="grp" t-key="grp.id">
+                                    <td class="text-center">
+                                        <t t-esc="summaryValue(group.key, metric, grp)"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+
+            <!-- One block per department: summary (left) + grade board (right) -->
+            <t t-foreach="departments" t-as="dept" t-key="dept.id">
+                <div class="o_kpi_dept_block">
+
+                    <!-- LEFT: summary. Department merged into a single cell. -->
+                    <table class="o_kpi_board_table table"
+                           t-att-class="state.showSummary ? '' : 'o_kpi_summary_collapsed'">
+                        <thead>
+                            <tr>
+                                <th class="o_kpi_dept_col">Department</th>
+                                <th t-if="state.showSummary">Employee</th>
+                                <th t-if="state.showSummary" class="text-center">Current</th>
+                                <th t-if="state.showSummary" class="text-center">New</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="dept.lines" t-as="line" t-key="line.id">
+                                <tr t-att-class="isMoved(line) ? 'o_kpi_row_moved' : ''">
+                                    <!-- Department cell only on the first row, spanning all -->
+                                    <td t-if="line_index === 0"
+                                        class="o_kpi_dept_cell"
+                                        t-att-rowspan="dept.lines.length">
+                                        <strong><t t-esc="dept.name"/></strong>
+                                    </td>
+                                    <t t-if="state.showSummary">
+                                        <td><t t-esc="line.data.employee_id and line.data.employee_id[1]"/></td>
+                                        <td class="text-center"><t t-esc="line.data.current_grade"/></td>
+                                        <td class="text-center"><strong><t t-esc="line.data.new_grade"/></strong></td>
+                                    </t>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- RIGHT: this department's own grade columns A-E -->
+                    <div class="o_kpi_board_columns">
+                        <t t-foreach="grades" t-as="grade" t-key="grade">
+                            <div class="o_kpi_board_col"
+                                 t-att-class="state.dragOverKey === colKey(dept.id, grade) ? 'o_kpi_col_dragover' : ''"
+                                 t-on-dragover="(ev) => this.onDragOver(ev, dept.id, grade)"
+                                 t-on-dragleave="() => this.onDragLeave(dept.id, grade)"
+                                 t-on-drop="(ev) => this.onDrop(ev, dept.id, grade)">
+                                <div class="o_kpi_col_header">
+                                    <span>Grade <t t-esc="grade"/></span>
+                                    <span class="o_kpi_col_count"><t t-esc="linesForGradeIn(dept.lines, grade).length"/></span>
+                                </div>
+                                <div class="o_kpi_col_body">
+                                    <t t-foreach="linesForGradeIn(dept.lines, grade)" t-as="line" t-key="line.id">
+                                        <div class="o_kpi_card"
+                                             t-att-class="(isMoved(line) ? 'o_kpi_card_moved ' : '') + (state.draggingId === line.id ? 'o_kpi_card_dragging' : '')"
+                                             t-att-draggable="readonly ? 'false' : 'true'"
+                                             t-on-dragstart="(ev) => this.onDragStart(ev, line)"
+                                             t-on-dragend="() => this.onDragEnd()">
+                                            <t t-esc="line.data.employee_id and line.data.employee_id[1]"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                </div>
+            </t>
+
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sequence for adjustment name -->
+    <record id="seq_kpi_adjustment" model="ir.sequence">
+        <field name="name">KPI Adjustment</field>
+        <field name="code">kpi.adjustment</field>
+        <field name="prefix">KPI/%(year)s/</field>
+        <field name="padding">4</field>
+    </record>
+
+    <!-- ============ ADJUSTMENT LIST ============ -->
+    <record id="view_kpi_adjustment_list" model="ir.ui.view">
+        <field name="name">kpi.adjustment.list</field>
+        <field name="model">kpi.adjustment</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="period_id"/>
+                <field name="changed_count"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'confirmed'"
+                       decoration-info="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============ ADJUSTMENT FORM ============ -->
+    <record id="view_kpi_adjustment_form" model="ir.ui.view">
+        <field name="name">kpi.adjustment.form</field>
+        <field name="model">kpi.adjustment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_populate_employees" type="object"
+                            string="Load Employees" class="btn-secondary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_confirm" type="object"
+                            string="Confirm" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_draft" type="object"
+                            string="Set to Draft"
+                            invisible="state != 'confirmed'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-list-alt"
+                                type="object" name="action_view_department_kpi">
+                            <field name="department_kpi_count" widget="statinfo"
+                                   string="Department KPI"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="period_id"
+                                   readonly="state != 'draft'"/>
+                            <field name="level_id"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="changed_count"/>
+                        </group>
+                    </group>
+
+                    <!-- View 1: Standard editable list, grouped by department,
+                         red row when grade changed -->
+                    <notebook>
+                        <page string="Grade Lines">
+                            <field name="line_ids"
+                                   readonly="state != 'draft'">
+                                <list editable="bottom"
+                                      decoration-danger="is_changed == True"
+                                      default_group_by="department_id">
+                                    <field name="department_id"
+                                           column_invisible="1"/>
+                                    <field name="employee_id"/>
+                                    <field name="department_kpi_id" readonly="1"/>
+                                    <field name="current_grade"/>
+                                    <field name="new_grade"/>
+                                    <field name="is_changed"
+                                           widget="boolean" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- View 2: Spreadsheet-like grid widget.
+                             Renders A-E cells from a single new_grade field. -->
+                        <page string="Grade Grid">
+                            <field name="line_ids" widget="kpi_grade_grid"
+                                   readonly="state != 'draft'"/>
+                        </page>
+
+                        <!-- View 3: Drag-and-drop board. Columns = grades,
+                             cards = employees. Drag a card to change new_grade;
+                             moved cards turn red. -->
+                        <page string="Grade Board">
+                            <field name="line_ids" widget="kpi_grade_board"
+                                   readonly="state != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kpi_adjustment" model="ir.actions.act_window">
+        <field name="name">KPI Grade Adjustments</field>
+        <field name="res_model">kpi.adjustment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

@@ -15,3 +15,6 @@ from . import salary_calculate
 from . import bonus_calculate
 from . import relative_adjustment_group
 from . import kpi_grade_extend
+from . import kpi_grade_history
+from . import kpi_adjustment
+from . import adjustment_integration
