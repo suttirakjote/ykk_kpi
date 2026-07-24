@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Report action -->
+    <record id="action_report_template_document" model="ir.actions.report">
+        <field name="name">แจ้งการปรับค่าจ้างฯ</field>
+        <field name="model">ykk.kpi.template.document</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ykk_kpi_management.report_template_document</field>
+        <field name="report_file">ykk_kpi_management.report_template_document</field>
+        <field name="print_report_name">"TemplateDoc-%s" % (object.name or "")</field>
+    </record>
+
+    <!-- QWeb template : 1 เอกสาร = 1 พนักงาน (พื้นฐานเฟส 1 - layout จริงทำเฟส 2) -->
+    <template id="report_template_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h3 class="text-center mb-4">แจ้งการปรับค่าจ้าง และผลการประเมินการปฏิบัติงาน</h3>
+                        <div class="row mb-3">
+                            <div class="col-6">เลขที่: <span t-field="doc.name"/></div>
+                            <div class="col-6 text-end">วันที่: <span t-field="doc.date"/></div>
+                        </div>
+                        <p><strong>พนักงาน:</strong> <span t-esc="doc.employee_id.display_name"/></p>
+                        <p><strong>เกรด:</strong> <span t-esc="doc.grade_id.name or ''"/></p>
+
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr><td>Current Salary</td><td class="text-end"><span t-esc="'%.2f' % doc.current_salary"/></td></tr>
+                                <tr><td>Final Increase Salary</td><td class="text-end"><span t-esc="'%.2f' % doc.final_increase"/></td></tr>
+                                <tr><td>New Salary</td><td class="text-end"><span t-esc="'%.2f' % doc.new_salary"/></td></tr>
+                                <tr><td>New Salary Month</td><td class="text-end"><span t-esc="'%.2f' % doc.new_salary_month"/></td></tr>
+                                <tr><td>Bonus</td><td class="text-end"><span t-esc="'%.2f' % doc.bonus"/></td></tr>
+                                <tr><td>Bonus(GRD)</td><td class="text-end"><span t-esc="'%.2f' % doc.bonus_grd"/></td></tr>
+                                <tr><td>Net Pay</td><td class="text-end"><span t-esc="'%.2f' % doc.net_pay"/></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,48 @@
+.o_kpi_grade_grid {
+    border-collapse: collapse;
+
+    th, td {
+        border: 1px solid #cfcfcf;
+        padding: 6px 10px;
+    }
+
+    .o_kpi_emp_col { min-width: 160px; }
+    .o_kpi_cur_col { min-width: 120px; text-align: center; }
+
+    .o_kpi_dept_row td {
+        background-color: #f5f5f5;
+        border-left: none;
+        border-right: none;
+    }
+
+    .o_kpi_cell {
+        text-align: center;
+        cursor: pointer;
+        min-width: 56px;
+        height: 34px;
+        user-select: none;
+
+        &:hover {
+            outline: 2px solid #875a7b;  // Odoo purple hover hint
+            outline-offset: -2px;
+        }
+    }
+
+    // empty cell that is still part of the green band (selectable area)
+    .o_kpi_empty {
+        background-color: #e8f5e9;  // light green band like the mockup
+    }
+
+    // selected cell, grade unchanged -> green
+    .o_kpi_matched {
+        background-color: #c8e6c9;
+        font-weight: bold;
+    }
+
+    // selected cell, grade changed -> red
+    .o_kpi_changed {
+        background-color: #f4a9a0;
+        color: #c0392b;
+        font-weight: bold;
+    }
+}

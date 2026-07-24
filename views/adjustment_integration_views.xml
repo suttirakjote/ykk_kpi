@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Department KPI > Summary : เพิ่ม Adjust Grade -->
+    <record id="view_department_kpi_form_adjust_grade" model="ir.ui.view">
+        <field name="name">ykk.kpi.department.kpi.form.adjust.grade</field>
+        <field name="model">ykk.kpi.department.kpi</field>
+        <field name="inherit_id" ref="ykk_kpi_management.view_ykk_kpi_department_kpi_form"/>
+        <field name="arch" type="xml">
+            <field name="overall_grade_id" position="after">
+                <field name="adjust_grade"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Salary Calculate : ปุ่ม Load Employee -->
+    <record id="view_salary_calculate_form_load_employee" model="ir.ui.view">
+        <field name="name">ykk.kpi.salary.calculate.form.load.employee</field>
+        <field name="model">ykk.kpi.salary.calculate</field>
+        <field name="inherit_id" ref="ykk_kpi_management.view_ykk_kpi_salary_calculate_form"/>
+        <field name="arch" type="xml">
+            <button name="action_confirm" position="before">
+                <button name="action_load_employee" type="object"
+                        string="Load Employee" class="btn-secondary"
+                        invisible="state != 'draft'"/>
+            </button>
+        </field>
+    </record>
+
+    <!-- Bonus Calculate : ปุ่ม Load Employee -->
+    <record id="view_bonus_calculate_form_load_employee" model="ir.ui.view">
+        <field name="name">ykk.kpi.bonus.calculate.form.load.employee</field>
+        <field name="model">ykk.kpi.bonus.calculate</field>
+        <field name="inherit_id" ref="ykk_kpi_management.view_ykk_kpi_bonus_calculate_form"/>
+        <field name="arch" type="xml">
+            <button name="action_confirm" position="before">
+                <button name="action_load_employee" type="object"
+                        string="Load Employee" class="btn-secondary"
+                        invisible="state != 'draft'"/>
+            </button>
+        </field>
+    </record>
+
+</odoo>

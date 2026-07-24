@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ykk_kpi_management.GradeGrid">
+        <table class="o_kpi_grade_grid table">
+            <thead>
+                <tr>
+                    <th class="o_kpi_emp_col">Employee</th>
+                    <th class="o_kpi_cur_col">Current Grade</th>
+                    <t t-foreach="grades" t-as="g" t-key="g">
+                        <th class="text-center"><t t-esc="g"/></th>
+                    </t>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="groupedLines" t-as="group" t-key="group.name">
+                    <tr class="o_kpi_dept_row">
+                        <td t-att-colspan="2 + grades.length">
+                            <strong>Department: <t t-esc="group.name"/></strong>
+                        </td>
+                    </tr>
+                    <t t-foreach="group.lines" t-as="line" t-key="line.id">
+                        <tr>
+                            <td><t t-esc="line.data.employee_id and line.data.employee_id[1]"/></td>
+                            <td class="text-center">
+                                <t t-esc="line.data.current_grade"/>
+                            </td>
+                            <t t-foreach="grades" t-as="g" t-key="g">
+                                <td t-att-class="'o_kpi_cell o_kpi_' + cellState(line, g)"
+                                    t-on-click="() => this.onCellClick(line, g)">
+                                    <t t-if="line.data.new_grade === g">
+                                        <span class="o_kpi_cell_label"><t t-esc="g"/></span>
+                                    </t>
+                                </td>
+                            </t>
+                        </tr>
+                    </t>
+                </t>
+            </tbody>
+        </table>
+    </t>
+
+</templates>

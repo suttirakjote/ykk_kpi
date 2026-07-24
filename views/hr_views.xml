@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_ykk_kpi_employee"
+        name="Employees"
+        parent="menu_ykk_kpi_configuration"
+        action="hr.open_view_employee_list_my"
+        sequence="60"/>
+
+    <menuitem id="menu_ykk_kpi_department"
+        name="Departments"
+        parent="menu_ykk_kpi_configuration"
+        action="hr.hr_department_kanban_action"
+        sequence="65"/>
+
+    <menuitem id="menu_ykk_kpi_job_position"
+        name="Job Positions"
+        parent="menu_ykk_kpi_configuration"
+        action="hr.action_hr_job"
+        sequence="70"/>
+        
+</odoo>

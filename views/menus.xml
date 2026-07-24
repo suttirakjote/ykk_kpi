@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_ykk_kpi_root"
+        name="KPI Management"
+        web_icon="ykk_kpi_management,static/description/icon.png"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_ykk_kpi_evaluate"
+        name="Evaluate"
+        parent="menu_ykk_kpi_root"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_ykk_kpi_allocation"
+        name="Allocation"
+        parent="menu_ykk_kpi_root"
+        sequence="20"/>
+
+    <menuitem
+        id="menu_ykk_kpi_configuration"
+        name="Configuration"
+        parent="menu_ykk_kpi_root"
+        sequence="100"/>
+
+</odoo>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_department_bell_curve_search" model="ir.ui.view">
+        <field name="name">ykk.kpi.department.bell.curve.search</field>
+        <field name="model">ykk.kpi.department.bell.curve</field>
+        <field name="arch" type="xml">
+            <search string="Department Bell Curve">
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="period_id"/>
+                <separator/>
+                <filter string="Date" name="date" date="date"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_department" string="Department" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_by_period" string="Period" context="{'group_by': 'period_id'}"/>
+                    <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_department_bell_curve_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.department.bell.curve.list</field>
+        <field name="model">ykk.kpi.department.bell.curve</field>
+        <field name="arch" type="xml">
+            <list string="Department Bell Curve" sample="1">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="department_id" optional="show"/>
+                <field name="period_id" optional="show"/>
+                <field name="employee_count" optional="show"/>
+                <field name="mean_score" optional="show"/>
+                <field name="std_dev" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_department_bell_curve_form" model="ir.ui.view">
+        <field name="name">ykk.kpi.department.bell.curve.form</field>
+        <field name="model">ykk.kpi.department.bell.curve</field>
+        <field name="arch" type="xml">
+            <form string="Department Bell Curve">
+                <header>
+                    <button name="action_load_data" string="Load Data" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="department_id" options="{'no_create': True}"/>
+                            <field name="period_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="employee_count"/>
+                            <field name="mean_score"/>
+                            <field name="std_dev"/>
+                            <field name="responsible_id" widget="many2one_avatar_user"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Result Table">
+                            <field name="line_ids">
+                                <list string="Employees" create="false" delete="false" editable="bottom">
+                                    <field name="employee_id" readonly="1"/>
+                                    <field name="group_position_id" readonly="1" optional="show"/>
+                                    <field name="level_id" readonly="1" optional="show"/>
+                                    <field name="overall_grade_id" readonly="1"/>
+                                    <field name="score" readonly="1"/>
+                                    <field name="new_grade_id" readonly="1" decoration-bf="1"/>
+                                    <field name="document_ref" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Bell Curve">
+                            <field name="bell_curve_svg" widget="html" readonly="1" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_department_bell_curve" model="ir.actions.act_window">
+        <field name="name">Department Bell Curve</field>
+        <field name="res_model">ykk.kpi.department.bell.curve</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Department Bell Curve.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_department_bell_curve"
+        name="Department Bell Curve"
+        parent="menu_ykk_kpi_evaluate"
+        action="action_department_bell_curve"
+        sequence="25"/>
+</odoo>
