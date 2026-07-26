@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="ykk_kpi_management.GradeBoard">
+    <t t-name="ykk_kpi.GradeBoard">
         <div class="o_kpi_board_root" t-ref="root"
              t-att-class="state.fullscreen ? 'o_kpi_fullscreen' : ''">
 

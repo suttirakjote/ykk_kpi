@@ -3,7 +3,7 @@
     <menuitem
         id="menu_ykk_kpi_root"
         name="KPI Management"
-        web_icon="ykk_kpi_management,static/description/icon.png"
+        web_icon="ykk_kpi,static/description/icon.png"
         sequence="10"/>
 
     <menuitem

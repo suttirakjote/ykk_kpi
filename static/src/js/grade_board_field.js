@@ -21,7 +21,7 @@ const GRADES = ["A", "B", "C", "D", "E"];
  *  - Full Screen expands the whole board to the viewport.
  */
 export class KpiGradeBoardField extends Component {
-    static template = "ykk_kpi_management.GradeBoard";
+    static template = "ykk_kpi.GradeBoard";
     static props = { ...standardFieldProps };
 
     setup() {

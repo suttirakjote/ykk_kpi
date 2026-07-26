@@ -20,6 +20,7 @@ class KpiHrEvaluation(models.Model):
         ("attitude", "Attitude Evaluation"),
     ], string="Type", required=True)
     department_id = fields.Many2one("hr.department", string="Department")
+    description = fields.Text(string="Description")
     company_id = fields.Many2one(
         "res.company",
         string="Company",

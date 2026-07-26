@@ -6,8 +6,8 @@
         <field name="name">แจ้งการปรับค่าจ้างฯ</field>
         <field name="model">ykk.kpi.template.document</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">ykk_kpi_management.report_template_document</field>
-        <field name="report_file">ykk_kpi_management.report_template_document</field>
+        <field name="report_name">ykk_kpi.report_template_document</field>
+        <field name="report_file">ykk_kpi.report_template_document</field>
         <field name="print_report_name">"TemplateDoc-%s" % (object.name or "")</field>
     </record>
 

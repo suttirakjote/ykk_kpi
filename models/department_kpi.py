@@ -241,6 +241,33 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
+    def action_view_goal(self):
+        self.ensure_one()
+        if not self.goal_id:
+            return False
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Goal"),
+            "res_model": "ykk.kpi.goal",
+            "res_id": self.goal_id.id,
+            "view_mode": "form",
+            "views": [
+                (
+                    self.env.ref("ykk_kpi.view_ykk_kpi_goal_form").id,
+                    "form",
+                )
+            ],
+            "target": "current",
+            "context": {
+                **self.env.context,
+                "create": False,
+                "edit": False,
+                "delete": False,
+                "form_view_initial_mode": "readonly",
+            },
+        }
+
     @api.depends("second_evaluator_score", "weight")
     def _compute_total_score(self):
         for record in self:

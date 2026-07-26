@@ -79,5 +79,5 @@ class TemplateDocument(models.Model):
 
     def action_print(self):
         return self.env.ref(
-            "ykk_kpi_management.action_report_template_document"
+            "ykk_kpi.action_report_template_document"
         ).report_action(self)

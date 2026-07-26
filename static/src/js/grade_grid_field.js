@@ -13,7 +13,7 @@ const GRADES = ["A", "B", "C", "D", "E"];
  * Clicking a cell sets new_grade for that line.
  */
 export class KpiGradeGridField extends Component {
-    static template = "ykk_kpi_management.GradeGrid";
+    static template = "ykk_kpi.GradeGrid";
     static props = { ...standardFieldProps };
 
     get grades() {

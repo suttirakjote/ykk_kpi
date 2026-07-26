@@ -88,6 +88,8 @@
                             <field name="performance_line_ids">
                                 <list editable="bottom">
                                     <field name="goal_id" options="{'no_create': True}"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search"
+                                        title="View Goal" invisible="not goal_id"/>
                                     <field name="achievement_criteria"/>
                                     <field name="weight" sum="Total Weight"/>
                                     <field name="comment_employee"/>

@@ -14,6 +14,7 @@ class KpiGoal(models.Model):
             ("section", "Section")], string="Group Type")
     type = fields.Selection([("performance", "Performance Evaluation")], string="Type", default="performance",required=True)
     department_id = fields.Many2one("hr.department", string="Department")
+    description = fields.Text(string="Description")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     active = fields.Boolean(string="Active", default=True)
 
