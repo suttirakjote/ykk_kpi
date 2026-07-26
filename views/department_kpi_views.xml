@@ -87,7 +87,7 @@
                         <page string="Performance Evaluation">
                             <field name="performance_line_ids">
                                 <list editable="bottom">
-                                    <field name="goal_id" options="{'no_create': True}"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"/>
                                     <button name="action_view_goal" type="object" icon="fa-search"
                                         title="View Goal" invisible="not goal_id"/>
                                     <field name="achievement_criteria"/>

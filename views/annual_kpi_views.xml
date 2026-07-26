@@ -80,7 +80,7 @@
                         <page string="Performance Evaluation">
                             <field name="performance_line_ids" readonly="state == 'done'">
                                 <list editable="bottom">
-                                    <field name="goal_id" options="{'no_create': True}" domain="[('type', '=', 'performance')]"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" domain="[('type', '=', 'performance')]"/>
                                     <button name="action_view_goal" type="object" icon="fa-search"
                                         title="View Goal" invisible="not goal_id"/>
                                     <field name="achievement_criteria"/>
