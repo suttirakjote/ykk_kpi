@@ -5,6 +5,13 @@ class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
     ykk_employee_code = fields.Char(string="Employee Code")
+    # ชื่อภาษาไทย - ใช้ในเอกสารแจ้งการปรับค่าจ้าง
+    ykk_thai_prefix = fields.Char(string="Thai Prefix")
+    ykk_thai_first_name = fields.Char(string="Thai First Name")
+    ykk_thai_last_name = fields.Char(string="Thai Last Name")
+    ykk_thai_full_name = fields.Char(
+        string="Thai Full Name", compute="_compute_ykk_thai_full_name"
+    )
     ykk_kpi_salary = fields.Float(string="Salary")
     ykk_kpi_level_id = fields.Many2one("ykk.kpi.level",string="Job Level")
     ykk_kpi_group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Position")
@@ -15,6 +22,18 @@ class HrEmployee(models.Model):
     ykk_age = fields.Char(string="Age", compute="_compute_ykk_age")
     ykk_salary_month = fields.Float(string="Salary/Month", compute="_compute_ykk_salary_month", store=True)
     ykk_kpi_history_ids = fields.One2many("ykk.kpi.employee.history", "employee_id", string="KPI History")
+
+    @api.depends("ykk_thai_prefix", "ykk_thai_first_name", "ykk_thai_last_name", "name")
+    def _compute_ykk_thai_full_name(self):
+        """คำนำหน้า + ชื่อ + สกุล (ภาษาไทย) - ถ้ายังไม่ได้กรอกให้ใช้ชื่อปกติแทน"""
+        for employee in self:
+            parts = [
+                employee.ykk_thai_prefix,
+                employee.ykk_thai_first_name,
+                employee.ykk_thai_last_name,
+            ]
+            thai_name = " ".join(part.strip() for part in parts if part)
+            employee.ykk_thai_full_name = thai_name or employee.name or ""
 
     @api.depends("birthday")
     def _compute_ykk_age(self):

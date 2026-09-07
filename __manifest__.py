@@ -18,6 +18,7 @@
         "data/running_sequence_data.xml",
         "data/salary_calculate_data.xml",
         "data/bonus_calculate_data.xml",
+        "data/report_paperformat_data.xml",
         "views/menus.xml",
         "views/department_kpi_views.xml",
         "views/department_bell_curve_views.xml",

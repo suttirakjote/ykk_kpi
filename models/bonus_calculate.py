@@ -139,14 +139,14 @@ class BonusCalculateLine(models.Model):
     level_id = fields.Many2one(
         "ykk.kpi.level",
         string="Job Level",
-        compute="_compute_from_employee",
+        compute="_compute_level_id",
         store=True,
         readonly=False,
     )
     department_id = fields.Many2one(
         "hr.department",
         string="Department",
-        compute="_compute_from_employee",
+        compute="_compute_department_id",
         store=True,
         readonly=False,
     )
@@ -157,7 +157,7 @@ class BonusCalculateLine(models.Model):
     )
     current_salary = fields.Float(
         string="Current Salary",
-        compute="_compute_from_employee",
+        compute="_compute_current_salary",
         store=True,
         readonly=False,
     )
@@ -211,13 +211,23 @@ class BonusCalculateLine(models.Model):
         store=True,
     )
 
+    # หมายเหตุ: แยก compute ทีละฟิลด์ ห้ามรวมหลายฟิลด์ไว้ในเมธอดเดียว
+    # เพราะถ้าส่งค่าฟิลด์ใดฟิลด์หนึ่งมาใน create() Odoo จะข้าม compute
+    # ของ "ทุกฟิลด์ที่ใช้เมธอดเดียวกัน" ทำให้ฟิลด์ที่เหลือว่างเปล่า
     @api.depends("employee_id")
-    def _compute_from_employee(self):
+    def _compute_level_id(self):
         for line in self:
-            employee = line.employee_id
-            line.level_id = employee.ykk_kpi_level_id
-            line.department_id = employee.department_id
-            line.current_salary = employee.ykk_kpi_salary
+            line.level_id = line.employee_id.ykk_kpi_level_id
+
+    @api.depends("employee_id")
+    def _compute_department_id(self):
+        for line in self:
+            line.department_id = line.employee_id.department_id
+
+    @api.depends("employee_id")
+    def _compute_current_salary(self):
+        for line in self:
+            line.current_salary = line.employee_id.ykk_kpi_salary
 
     @api.depends("calculate_id.work_day_of_year")
     def _compute_day_att(self):

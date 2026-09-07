@@ -1,9 +1,10 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 class KpiGoal(models.Model):
     _name = "ykk.kpi.goal"
     _description = "KPI Goal Configuration"
     _order = "id desc"
+    _rec_names_search = ["code", "name"]
 
     code = fields.Char(string="Code", required=True)
     name = fields.Char(string="Name", required=True)
@@ -20,5 +21,10 @@ class KpiGoal(models.Model):
 
     _sql_constraints = [
         ("code_company_unique", "unique(code, company_id)", "The code must be unique per company."),
-        ("name_company_unique", "unique(name, company_id)", "The name must be unique per company."),
     ]
+
+    @api.depends("code", "name")
+    def _compute_display_name(self):
+        """แสดงเป็น [Code] Name ทุกที่ที่อ้างถึง Goal"""
+        for record in self:
+            record.display_name = "[%s] %s" % (record.code, record.name) if record.code else record.name

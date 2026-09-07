@@ -60,6 +60,8 @@ access_ykk_kpi_import_tiger_soft_line_user,ykk.kpi.import.tiger.soft.line user,m
 access_ykk_kpi_import_tiger_soft_line_admin,ykk.kpi.import.tiger.soft.line administrator,model_ykk_kpi_import_tiger_soft_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_template_document_user,ykk.kpi.template.document user,model_ykk_kpi_template_document,group_ykk_kpi_user,1,1,1,1
 access_ykk_kpi_template_document_admin,ykk.kpi.template.document administrator,model_ykk_kpi_template_document,group_ykk_kpi_admin,1,1,1,1
+access_ykk_kpi_template_document_line_user,ykk.kpi.template.document.line user,model_ykk_kpi_template_document_line,group_ykk_kpi_user,1,1,1,1
+access_ykk_kpi_template_document_line_admin,ykk.kpi.template.document.line administrator,model_ykk_kpi_template_document_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_bell_curve_user,ykk.kpi.department.bell.curve user,model_ykk_kpi_department_bell_curve,group_ykk_kpi_user,1,1,1,1
 access_ykk_kpi_department_bell_curve_admin,ykk.kpi.department.bell.curve administrator,model_ykk_kpi_department_bell_curve,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_bell_curve_line_user,ykk.kpi.department.bell.curve.line user,model_ykk_kpi_department_bell_curve_line,group_ykk_kpi_user,1,1,1,1

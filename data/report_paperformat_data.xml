@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ขนาดกระดาษสำหรับเอกสารแจ้งการปรับค่าจ้าง
+         ค่า default ของ Odoo คือ ซ้าย/ขวา 7mm ซึ่งชิดขอบเกินไปสำหรับจดหมาย -->
+    <record id="paperformat_ykk_letter" model="report.paperformat">
+        <field name="name">YKK Letter (A4)</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">20</field>
+        <field name="margin_bottom">18</field>
+        <field name="margin_left">20</field>
+        <field name="margin_right">20</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">8</field>
+        <field name="dpi">90</field>
+    </record>
+
+</odoo>

@@ -11,6 +11,18 @@
                 <field name="ykk_employee_code"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
+                <page string="Thai Name" name="ykk_thai_name">
+                    <group>
+                        <group string="ชื่อภาษาไทย (ใช้ในเอกสารแจ้งการปรับค่าจ้าง)">
+                            <field name="ykk_thai_prefix" placeholder="เช่น นาย / นาง / นางสาว"/>
+                            <field name="ykk_thai_first_name"/>
+                            <field name="ykk_thai_last_name"/>
+                            <field name="ykk_thai_full_name"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
                 <page string="KPI Details" name="ykk_kpi_details">
                     <group>
                         <group string="KPI Information">

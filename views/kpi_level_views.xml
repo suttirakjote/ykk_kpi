@@ -20,6 +20,7 @@
         <field name="model">ykk.kpi.level</field>
         <field name="arch" type="xml">
             <list string="Job Levels" sample="1" editable="bottom" multi_edit="1">
+                <field name="code" optional="show"/>
                 <field name="name"/>
                 <field name="merit" optional="show"/>
                 <field name="att" optional="show"/>

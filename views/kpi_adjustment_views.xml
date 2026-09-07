@@ -88,8 +88,19 @@
                         <!-- View 2: Spreadsheet-like grid widget.
                              Renders A-E cells from a single new_grade field. -->
                         <page string="Grade Grid">
+                            <!-- inline list = บอก Odoo ว่า widget ต้องใช้ฟิลด์ไหนบ้าง
+                                 (ตัว list ไม่ถูกวาด เพราะ widget วาด template ของตัวเอง)
+                                 ห้ามย้ายไปประกาศเป็น relatedFields ใน JS
+                                 เพราะจะไปทับ label ของฟิลด์ ทำให้หัวตารางแท็บ Grade Lines หาย -->
                             <field name="line_ids" widget="kpi_grade_grid"
-                                   readonly="state != 'draft'"/>
+                                   readonly="state != 'draft'">
+                                <list>
+                                    <field name="employee_id"/>
+                                    <field name="department_id"/>
+                                    <field name="current_grade"/>
+                                    <field name="new_grade"/>
+                                </list>
+                            </field>
                         </page>
 
                         <!-- View 3: Drag-and-drop board. Columns = grades,
@@ -97,7 +108,15 @@
                              moved cards turn red. -->
                         <page string="Grade Board">
                             <field name="line_ids" widget="kpi_grade_board"
-                                   readonly="state != 'draft'"/>
+                                   readonly="state != 'draft'">
+                                <list>
+                                    <field name="employee_id"/>
+                                    <field name="department_id"/>
+                                    <field name="department_kpi_id"/>
+                                    <field name="current_grade"/>
+                                    <field name="new_grade"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

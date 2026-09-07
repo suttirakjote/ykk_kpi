@@ -7,10 +7,13 @@
         <field name="arch" type="xml">
             <form string="Template Document">
                 <header>
-                    <button name="action_load_data" string="Load Data" type="object"
-                        class="btn-primary" invisible="not employee_id"/>
-                    <button name="action_print" string="Print" type="object"
-                        class="btn-secondary" invisible="not employee_id"/>
+                    <button name="action_load_employees" string="Load Employees" type="object"
+                        class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_print" string="Print PDF" type="object"
+                        class="btn-secondary" invisible="not line_ids"/>
+                    <button name="action_draft" string="Reset to Draft" type="object"
+                        invisible="state != 'generated'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,generated"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -18,30 +21,108 @@
                     </div>
                     <group>
                         <group>
-                            <field name="employee_id" options="{'no_create': True}"/>
-                            <field name="grade_id" readonly="1"/>
+                            <field name="generate_date"/>
+                            <field name="effective_date"/>
                             <field name="period_id" options="{'no_create': True}"/>
-                            <field name="date"/>
+                            <field name="responsible_id" widget="many2one_avatar_user"/>
                         </group>
                         <group>
                             <field name="salary_calculate_id" options="{'no_create': True}"/>
                             <field name="bonus_calculate_id" options="{'no_create': True}"/>
-                            <field name="responsible_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
-                    <group>
-                        <group string="Salary">
-                            <field name="current_salary" readonly="1"/>
-                            <field name="final_increase" readonly="1"/>
-                            <field name="new_salary" readonly="1"/>
-                            <field name="new_salary_month" readonly="1"/>
-                        </group>
-                        <group string="Bonus">
-                            <field name="bonus" readonly="1"/>
-                            <field name="bonus_grd" readonly="1"/>
-                            <field name="net_pay" readonly="1"/>
-                        </group>
+                    <group string="Page Setup" col="4">
+                        <field name="font_size"/>
+                        <field name="show_company_header"/>
+                        <field name="show_page_number"/>
                     </group>
+                    <!-- render_model ใช้บอก widget dynamic placeholder ว่าอ้างอิง model ไหน -->
+                    <field name="render_model" invisible="1"/>
+                    <notebook>
+                        <page string="Employees" name="employees">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="employee_id" options="{'no_create': True}"/>
+                                    <field name="employee_thai_name" optional="show"/>
+                                    <field name="department_id" optional="hide"/>
+                                    <field name="level_id" optional="show"/>
+                                    <field name="grade_id" options="{'no_create': True}"/>
+                                    <field name="current_salary" optional="show"/>
+                                    <field name="increase_new_salary_year" optional="show"/>
+                                    <field name="plus_minus" optional="show"/>
+                                    <field name="over_leave_day" optional="show"/>
+                                    <field name="over_leave_baht" optional="show"/>
+                                    <field name="premium" optional="show"/>
+                                    <field name="new_salary" optional="show"/>
+                                    <field name="merit" optional="hide"/>
+                                    <field name="att" optional="hide"/>
+                                    <field name="increase_percent" optional="hide"/>
+                                    <field name="final_increase" optional="hide"/>
+                                    <field name="new_salary_month" optional="hide"/>
+                                    <field name="bonus" optional="hide"/>
+                                    <field name="bonus_grd" optional="hide"/>
+                                    <field name="net_pay" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Document Context" name="context">
+                            <button name="action_reset_context" type="object"
+                                string="Reset Context to Default" icon="fa-refresh"
+                                class="btn-link ps-0"
+                                confirm="เนื้อหาที่แก้ไว้จะถูกแทนที่ด้วยแบบฟอร์มมาตรฐานทั้งหมด ยืนยันหรือไม่?"/>
+                            <group>
+                                <field name="doc_title"
+                                       options="{'dynamic_placeholder': true, 'dynamic_placeholder_model_reference_field': 'render_model'}"
+                                       placeholder='เช่น "แจ้งการปรับค่าจ้าง - {{ object.employee_name }}"'/>
+                            </group>
+                            <separator string="Body"/>
+                            <field name="body_html" widget="html" class="oe-bordered-editor"
+                                   options="{'codeview': true, 'dynamic_placeholder': true, 'dynamic_placeholder_model_reference_field': 'render_model'}"/>
+                            <separator string="Footer"/>
+                            <field name="footer_html" widget="html" class="oe-bordered-editor"
+                                   options="{'codeview': true, 'dynamic_placeholder': true, 'dynamic_placeholder_model_reference_field': 'render_model'}"/>
+                            <div class="alert alert-info mt-3" role="alert">
+                                <p class="mb-1">
+                                    <strong>วิธีใส่ค่าอัตโนมัติ (Placeholder)</strong> —
+                                    พิมพ์ <code>/field</code> ในช่อง Body/Footer เพื่อเลือกฟิลด์
+                                    หรือพิมพ์เอง <code>&lt;t t-out="object.employee_name"/&gt;</code>
+                                    (ช่อง Document Title ใช้รูปแบบ <code>{{ object.employee_name }}</code>)
+                                </p>
+                                <p class="mb-1">
+                                    <strong>ข้อมูลพนักงาน:</strong>
+                                    <code>employee_thai_name</code>, <code>employee_name</code>,
+                                    <code>employee_code</code>, <code>level_code</code>,
+                                    <code>level_name</code>, <code>department_name</code>,
+                                    <code>grade_name</code>, <code>period_name</code>,
+                                    <code>salary_unit</code>, <code>responsible_name</code>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>วันที่ (พ.ศ.):</strong>
+                                    <code>generate_date_th</code>, <code>effective_date_th</code>,
+                                    <code>year_th</code>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>ตัวเลข (จัดรูปแบบแล้ว):</strong>
+                                    <code>current_salary_text</code>,
+                                    <code>increase_new_salary_year_text</code>,
+                                    <code>plus_minus_text</code>, <code>over_leave_day_text</code>,
+                                    <code>over_leave_baht_text</code>, <code>premium_text</code>,
+                                    <code>new_salary_text</code>, <code>increase_percent_text</code>,
+                                    <code>merit_text</code>, <code>att_text</code>,
+                                    <code>final_increase_text</code>, <code>new_salary_month_text</code>,
+                                    <code>bonus_text</code>, <code>bonus_grd_text</code>,
+                                    <code>net_pay_text</code>
+                                </p>
+                            </div>
+                        </page>
+                        <page string="Preview" name="preview">
+                            <div class="text-muted mb-2">
+                                ตัวอย่างเอกสารของพนักงานคนแรกในแท็บ Employees (บันทึกเอกสารก่อนจึงจะอัปเดต)
+                            </div>
+                            <field name="preview_html" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -53,11 +134,15 @@
         <field name="arch" type="xml">
             <list string="Template Document">
                 <field name="name"/>
-                <field name="employee_id"/>
-                <field name="grade_id"/>
+                <field name="generate_date"/>
                 <field name="period_id"/>
-                <field name="date"/>
+                <field name="employee_count"/>
+                <field name="salary_calculate_id" optional="show"/>
+                <field name="bonus_calculate_id" optional="show"/>
                 <field name="responsible_id"/>
+                <field name="state" widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-success="state == 'generated'"/>
             </list>
         </field>
     </record>

@@ -61,7 +61,7 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Behavior Evaluation">
+                        <page string="Archivement Criteria">
                             <field name="achievement_criteria" nolabel="1" placeholder="Add a criteria..."/>
                         </page>
                         <page string="Criteria Details">

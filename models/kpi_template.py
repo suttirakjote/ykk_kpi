@@ -39,7 +39,11 @@ class KpiTemplate(models.Model):
         existing = self.performance_line_ids.mapped("goal_id")
         for goal in self.goal_select_ids:
             if goal not in existing:
-                self.performance_line_ids |= Line.new({"goal_id": goal.id})
+                self.performance_line_ids |= Line.new({
+                    "goal_id": goal.id,
+                    "achievement_criteria": goal.achievement_criteria,
+                    "criteria_details": goal.criteria_details,
+                })
         # เคลียร์ฟิลด์ช่วยหลังเพิ่มบรรทัดแล้ว
         self.goal_select_ids = [(5, 0, 0)]
 
@@ -61,3 +65,10 @@ class KpiTemplatePerformanceLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
     weight = fields.Float(string="Weight")
+
+    @api.onchange("goal_id")
+    def _onchange_goal_id(self):
+        """ดึง Achievement Criteria / Criteria Details จาก Goal มาเป็นค่าตั้งต้น"""
+        for line in self:
+            line.achievement_criteria = line.goal_id.achievement_criteria
+            line.criteria_details = line.goal_id.criteria_details

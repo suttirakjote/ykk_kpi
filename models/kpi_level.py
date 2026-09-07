@@ -5,6 +5,7 @@ class KpiLevel(models.Model):
     _description = "KPI Level"
     _order = "id desc"
 
+    code = fields.Char(string="Code")
     name = fields.Char(string="Name", required=True)
     description = fields.Text(string="Description")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
