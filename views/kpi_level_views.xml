@@ -27,6 +27,7 @@
                 <field name="min_salary" optional="show"/>
                 <field name="max_salary" optional="show"/>
                 <field name="group_position_id" options="{'no_create': True}" optional="show"/>
+                <field name="indicator_weight" optional="show"/>
                 <field name="description" optional="show"/>
                 <field name="active"/>
             </list>

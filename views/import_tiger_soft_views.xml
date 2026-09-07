@@ -5,9 +5,9 @@
         <field name="name">ykk.kpi.import.tiger.soft.form</field>
         <field name="model">ykk.kpi.import.tiger.soft</field>
         <field name="arch" type="xml">
-            <form string="Import Tiger Soft">
+            <form string="Import HR Data">
                 <header>
-                    <button name="action_update_data" string="Update Data" type="object"
+                    <button name="action_update_data" string="Import Data" type="object"
                         class="btn-primary"/>
                 </header>
                 <sheet>
@@ -26,6 +26,7 @@
                             <field name="line_ids" readonly="1">
                                 <list>
                                     <field name="year"/>
+                                    <field name="salary"/>
                                     <field name="employee_code"/>
                                     <field name="employee_id"/>
                                     <field name="date_att"/>
@@ -38,6 +39,7 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -46,7 +48,7 @@
         <field name="name">ykk.kpi.import.tiger.soft.list</field>
         <field name="model">ykk.kpi.import.tiger.soft</field>
         <field name="arch" type="xml">
-            <list string="Import Tiger Soft">
+            <list string="Import HR Data">
                 <field name="name"/>
                 <field name="upload_filename"/>
                 <field name="user_id"/>
@@ -56,13 +58,13 @@
     </record>
 
     <record id="action_import_tiger_soft" model="ir.actions.act_window">
-        <field name="name">Import Tiger Soft</field>
+        <field name="name">Import HR Data</field>
         <field name="res_model">ykk.kpi.import.tiger.soft</field>
         <field name="view_mode">list,form</field>
     </record>
 
     <menuitem id="menu_ykk_kpi_import_tiger_soft"
-        name="Import Tiger Soft"
+        name="Import HR Data"
         parent="menu_kpi_adjustment_root"
         action="action_import_tiger_soft"
         sequence="40"/>

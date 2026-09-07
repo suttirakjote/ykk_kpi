@@ -26,19 +26,19 @@
                 <page string="KPI Details" name="ykk_kpi_details">
                     <group>
                         <group string="KPI Information">
-                            <field name="ykk_kpi_salary"/>
                             <field name="ykk_salary_month"/>
                             <field name="ykk_kpi_level_id" options="{'no_create': True}"/>
                             <field name="ykk_kpi_group_position_id" options="{'no_create': True}"/>
                             <field name="ykk_kpi_employee_type"/>
                             <field name="ykk_start_work_date"/>
-                            <field name="ykk_age"/>
+                            <field name="ykk_tenure"/>
                         </group>
                     </group>
                     <group string="KPI History">
                         <field name="ykk_kpi_history_ids" nolabel="1">
                             <list editable="bottom">
                                 <field name="year"/>
+                                <field name="salary"/>
                                 <field name="date_att"/>
                                 <field name="over_leave_day"/>
                                 <field name="update"/>

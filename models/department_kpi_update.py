@@ -6,11 +6,11 @@ class KpiDepartmentKpi(models.Model):
     _inherit = "ykk.kpi.department.kpi"
 
     def action_update_from_annual(self):
-        """คัดลอกบรรทัดจาก Annual KPI ที่เลือก มาใส่ใน 4 tab ของ Department KPI
+        """คัดลอกบรรทัดจาก KPI/Goal Setting ที่เลือก มาใส่ใน 4 tab ของ Evaluation
         (ยกเว้น tab Summary). บรรทัดเดิมในแต่ละ tab จะถูกแทนที่ทั้งหมด"""
         self.ensure_one()
         if not self.annual_id:
-            raise UserError("Please select an Annual KPI before updating.")
+            raise UserError("Please select an KPI/Goal Setting before updating.")
 
         annual = self.annual_id
 

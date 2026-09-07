@@ -4,6 +4,7 @@ from . import kpi_grade
 from . import kpi_group_position
 from . import kpi_level
 from . import kpi_period
+from . import sequence_setting
 from . import department_kpi
 from . import department_kpi_update
 from . import annual_kpi

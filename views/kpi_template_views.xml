@@ -9,12 +9,14 @@
                 <field name="name"/>
                 <field name="level_id"/>
                 <field name="department_id"/>
+                <field name="period_id"/>
                 <field name="state"/>
                 <separator/>
                 <filter string="Date" name="date" date="date"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_level" string="Level" context="{'group_by': 'level_id'}"/>
                     <filter name="group_by_department" string="Department" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_by_period" string="Period" context="{'group_by': 'period_id'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
                 </group>
@@ -30,6 +32,7 @@
                 <field name="name"/>
                 <field name="level_id" optional="show"/>
                 <field name="department_id" optional="show"/>
+                <field name="period_id" optional="show"/>
                 <field name="date"/>
                 <field name="state" widget="badge" 
                     decoration-info="state == 'draft'"
@@ -60,6 +63,7 @@
                             <field name="remark" readonly="state != 'draft'"/>
                         </group>
                         <group>
+                            <field name="period_id" options="{'no_create': True}" required="1" readonly="state != 'draft'"/>
                             <field name="date" readonly="state != 'draft'"/>
                             <field name="responsible_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
                         </group>

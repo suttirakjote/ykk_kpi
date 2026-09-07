@@ -12,6 +12,7 @@ class KpiLevel(models.Model):
     active = fields.Boolean(string="Active", default=True)
 
     group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Job")
+    indicator_weight = fields.Integer(string="Indicator Weight (%)")
     merit = fields.Float(string="Merit")
     att = fields.Float(string="Att.")
     min_salary = fields.Float(string="Min Salary")

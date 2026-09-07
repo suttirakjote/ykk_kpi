@@ -1,18 +1,19 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
 
 class KpiDepartmentKpi(models.Model):
     _name = "ykk.kpi.department.kpi"
-    _description = "Department KPI"
+    _description = "Evaluation"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "id desc"
 
     name = fields.Char(string="Name", default='New', required=True, readonly=True)
     state = fields.Selection(
         [
-            ("draft", "Draft"),
-            ("inprocess", "Inprocess"),
-            ("evaluated", "Evaluated"),
+            ("draft", "Self Evaluate"),
+            ("inprocess", "1st Evaluate"),
+            ("evaluated", "2nd Evaluate"),
+            ("approved", "Approved"),
             ("cancel", "Cancel"),
         ],
         string="Status",
@@ -27,7 +28,7 @@ class KpiDepartmentKpi(models.Model):
     period_id = fields.Many2one("ykk.kpi.period", string="Period", required=True, tracking=True)
     responsible_id = fields.Many2one("res.users", string="Responsible", default=lambda self: self.env.user)
     date = fields.Date(string='Date', default=fields.Date.context_today)
-    annual_id = fields.Many2one("ykk.kpi.annual.kpi", string="Annual KPI")
+    annual_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting")
     performance_line_ids = fields.One2many("ykk.kpi.department.kpi.performance.line", "department_kpi_id", string="Performance Evaluation")
     role_line_ids = fields.One2many("ykk.kpi.department.kpi.role.line", "department_kpi_id", string="Role-based Behavior Evaluation")
     behavior_line_ids = fields.One2many("ykk.kpi.department.kpi.behavior.line", "department_kpi_id", string="Behavior Evaluation")
@@ -47,12 +48,46 @@ class KpiDepartmentKpi(models.Model):
     overall_score = fields.Integer(string="Overall Score", compute="_compute_overall_grade")
     overall_grade_id = fields.Many2one("ykk.kpi.grade", string="Overall Grade", compute="_compute_overall_grade")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
+    group_kpi_user = fields.Boolean(compute="_compute_group_kpi_user")
 
-    # Indicator Weight (read-only) ดึงจาก Annual KPI ที่อ้างอิง - แสดงใน tab Summary
+    # Indicator Weight (read-only) ดึงจาก KPI/Goal Setting ที่อ้างอิง - แสดงใน tab Summary
     performance_weight = fields.Integer(related="annual_id.performance_weight", string="Performance Evaluation", readonly=True)
     role_based_behavior_weight = fields.Integer(related="annual_id.role_based_behavior_weight", string="Role-based Behavior Evaluation", readonly=True)
     behavior_weight = fields.Integer(related="annual_id.behavior_weight", string="Behavior Evaluation", readonly=True)
     attitude_weight = fields.Integer(related="annual_id.attitude_weight", string="Attitude Evaluation", readonly=True)
+
+    description = fields.Html(string='Description', sanitize_attributes=False)
+
+    @api.depends_context("uid")
+    def _compute_group_kpi_user(self):
+        user = self.env.user
+        readonly_user = (
+            user.has_group("ykk_kpi.group_ykk_kpi_user")
+            and not user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        )
+        for record in self:
+            record.group_kpi_user = readonly_user
+
+    @api.model
+    def _validate_unique_employee_period(self, employee_id, period_id):
+        if not employee_id or not period_id:
+            return
+
+        duplicate = self.search(
+            [
+                ("employee_id", "=", employee_id),
+                ("period_id", "=", period_id),
+            ],
+            limit=1,
+        )
+        if duplicate:
+            raise ValidationError(
+                _(
+                    "The document cannot be created because the Employee and Period "
+                    "already exist in document number %s."
+                )
+                % duplicate.display_name
+            )
 
     @api.depends(
         "performance_line_ids", 
@@ -91,13 +126,6 @@ class KpiDepartmentKpi(models.Model):
             record.level_id = record.employee_id.ykk_kpi_level_id
             record.department_id = record.employee_id.department_id
     
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get('name', 'New') == 'New':
-                vals['name'] = self.env['ir.sequence'].next_by_code('ykk.kpi.department.kpi') or 'New'
-        return super(KpiDepartmentKpi, self).create(vals_list)
-
     def action_confirm(self):
         self.write({"state": "inprocess"})
 
@@ -119,8 +147,19 @@ class KpiDepartmentKpi(models.Model):
                 )
         self.write({"state": "evaluated"})
 
+    def action_approve(self):
+        if not self.env.user.has_group("ykk_kpi.group_ykk_kpi_approve"):
+            raise AccessError(_("You do not have permission to approve Evaluations."))
+        invalid_records = self.filtered(lambda record: record.state != "evaluated")
+        if invalid_records:
+            raise ValidationError(_("Only Evaluations in the 2nd Evaluate status can be approved."))
+        self.write({"state": "approved"})
+
     def action_cancel(self):
         self.write({"state": "cancel"})
+
+    def action_draft(self):
+        self.write({"state": "draft"})
     
     # -----------------------------------------------------
     # Calculate Grade
@@ -197,11 +236,11 @@ class KpiDepartmentKpi(models.Model):
 
 class KpiDepartmentKpiSummaryLine(models.Model):
     _name = "ykk.kpi.department.kpi.summary.line"
-    _description = "Department KPI Summary Parent"
+    _description = "Evaluation Summary Parent"
 
     department_kpi_id = fields.Many2one(
         "ykk.kpi.department.kpi",
-        string="Department KPI",
+        string="Evaluation",
         required=True,
         ondelete="cascade",
     )
@@ -227,9 +266,15 @@ class KpiDepartmentKpiSummaryLine(models.Model):
 
 class KpiDepartmentKpiPerformanceLine(models.Model):
     _name = "ykk.kpi.department.kpi.performance.line"
-    _description = "KPI Department KPI Performance Line"
+    _description = "KPI Evaluation Performance Line"
 
-    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Department KPI")
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
+    evaluation_state = fields.Selection(
+        related="department_kpi_id.state",
+        string="Evaluation Status",
+        readonly=True,
+    )
+    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
     goal_id = fields.Many2one("ykk.kpi.goal", string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -240,6 +285,16 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    @api.depends_context("uid")
+    def _compute_group_kpi_user(self):
+        user = self.env.user
+        readonly_user = (
+            user.has_group("ykk_kpi.group_ykk_kpi_user")
+            and not user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        )
+        for record in self:
+            record.group_kpi_user = readonly_user
 
     def action_view_goal(self):
         self.ensure_one()
@@ -258,7 +313,7 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
                     "form",
                 )
             ],
-            "target": "current",
+            "target": "new",
             "context": {
                 **self.env.context,
                 "create": False,
@@ -282,9 +337,9 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
 
 class KpiDepartmentKpiRoleLine(models.Model):
     _name = "ykk.kpi.department.kpi.role.line"
-    _description = "KPI Department KPI Role-based Behavior Evaluation Line"
+    _description = "KPI Evaluation Role-based Behavior Evaluation Line"
 
-    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Department KPI")
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -310,9 +365,9 @@ class KpiDepartmentKpiRoleLine(models.Model):
 
 class KpiDepartmentKpiBehaviorLine(models.Model):
     _name = "ykk.kpi.department.kpi.behavior.line"
-    _description = "KPI Department KPI Behavior Evaluation Line"
+    _description = "KPI Evaluation Behavior Evaluation Line"
 
-    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Department KPI")
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -338,9 +393,9 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
 
 class KpiDepartmentKpiAttitudeLine(models.Model):
     _name = "ykk.kpi.department.kpi.attitude.line"
-    _description = "KPI Department KPI Attitude Evaluation Line"
+    _description = "KPI Evaluation Attitude Evaluation Line"
 
-    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Department KPI")
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")

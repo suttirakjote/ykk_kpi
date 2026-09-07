@@ -13,9 +13,10 @@ class KpiPeriod(models.Model):
         ("month", "Month"),
         ("quarter", "Quarter"),
         ("half_year", "Half Year"),
-        ("year", "Year")], string="Period Type", required=True)
-    start_date = fields.Date(string="Start Date", required=True)
-    end_date = fields.Date(string="End Date", required=True)
+        ("year", "Year")], string="Period Type")
+    start_date = fields.Date(string="Start Date")
+    end_date = fields.Date(string="End Date")
+    suffix = fields.Char(string="Suffix")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     active = fields.Boolean(string="Active", default=True)
 

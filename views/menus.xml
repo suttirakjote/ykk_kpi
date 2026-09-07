@@ -8,7 +8,7 @@
 
     <menuitem
         id="menu_ykk_kpi_evaluate"
-        name="Evaluate"
+        name="KPI"
         parent="menu_ykk_kpi_root"
         sequence="10"/>
 

@@ -36,7 +36,7 @@ def _probit(p):
 
 class KpiDepartmentBellCurve(models.Model):
     _name = "ykk.kpi.department.bell.curve"
-    _description = "Department Bell Curve"
+    _description = "Grade Distribution"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
@@ -73,7 +73,7 @@ class KpiDepartmentBellCurve(models.Model):
             ("period_id", "=", self.period_id.id),
         ])
         if not kpis:
-            raise UserError(_("ไม่พบข้อมูล Department KPI ตามเงื่อนไขที่เลือก"))
+            raise UserError(_("ไม่พบข้อมูล Evaluation ตามเงื่อนไขที่เลือก"))
         commands = [(5, 0, 0)]
         for kpi in kpis:
             commands.append((0, 0, {
@@ -328,13 +328,13 @@ class KpiDepartmentBellCurve(models.Model):
 
 class KpiDepartmentBellCurveLine(models.Model):
     _name = "ykk.kpi.department.bell.curve.line"
-    _description = "Department Bell Curve Line"
+    _description = "Grade Distribution Line"
     _order = "score desc, id"
 
     bell_curve_id = fields.Many2one(
         "ykk.kpi.department.bell.curve", string="Bell Curve", required=True, ondelete="cascade"
     )
-    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Department KPI Ref")
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation Ref")
     employee_id = fields.Many2one("hr.employee", string="Employee Name")
     group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Position")
     level_id = fields.Many2one("ykk.kpi.level", string="Job Level")

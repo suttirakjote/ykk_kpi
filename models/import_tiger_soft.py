@@ -2,10 +2,12 @@ import base64
 import io
 
 from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 # match ชื่อ column ใน row แรก (lowercase + strip) -> field
 HEADER_MAP = {
     "year": "year",
+    "salary": "salary",
     "employee code": "employee_code",
     "date att": "date_att",
     "over leave day": "over_leave_day",
@@ -14,7 +16,8 @@ HEADER_MAP = {
 
 class ImportTigerSoft(models.Model):
     _name = "ykk.kpi.import.tiger.soft"
-    _description = "Import Tiger Soft"
+    _description = "Import HR Data"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
     name = fields.Char(string="Reference", default="New", readonly=True, copy=False)
@@ -70,6 +73,7 @@ class ImportTigerSoft(models.Model):
             emp_code = cell(row, "employee_code")
             rows_out.append({
                 "year": int(year) if year not in (None, "") else 0,
+                "salary": float(cell(row, "salary") or 0),
                 "employee_code": str(emp_code).strip() if emp_code not in (None, "") else "",
                 "date_att": float(cell(row, "date_att") or 0),
                 "over_leave_day": float(cell(row, "over_leave_day") or 0),
@@ -94,6 +98,7 @@ class ImportTigerSoft(models.Model):
                 action_type = "update" if existing else "insert"
             commands.append((0, 0, {
                 "year": data["year"],
+                "salary": data["salary"],
                 "employee_code": data["employee_code"],
                 "employee_id": employee.id if employee else False,
                 "date_att": data["date_att"],
@@ -110,7 +115,8 @@ class ImportTigerSoft(models.Model):
     def action_update_data(self):
         """update ข้อมูลเข้า KPI History ของพนักงาน
         - มี (Year + Employee code) แล้ว -> update
-        - ยังไม่มี -> insert"""
+        - ยังไม่มี -> insert
+        - ถ้ามี Employee Code ที่ไม่พบ -> ยกเลิกการ import ทั้งหมด"""
         self.ensure_one()
         # ถ้ายังไม่มี line แต่มีไฟล์ -> parse จากไฟล์ก่อน (กันกรณี onchange ไม่ทำงาน)
         if not self.line_ids and self.upload_file:
@@ -119,19 +125,38 @@ class ImportTigerSoft(models.Model):
         History = self.env["ykk.kpi.employee.history"]
         now = fields.Datetime.now()
         inserted = updated = 0
+        resolved_lines = []
         not_found = []
+
+        # ตรวจสอบ Employee Code ทุกบรรทัดก่อนเริ่มเขียนข้อมูล เพื่อป้องกัน
+        # partial import เมื่อมีข้อมูลแม้เพียงหนึ่งบรรทัดที่ไม่ match
         for line in self.line_ids:
-            employee = line.employee_id or Emp.search(
+            employee = Emp.search(
                 [("ykk_employee_code", "=", line.employee_code)], limit=1
             )
             if not employee:
-                not_found.append(line.employee_code)
-                continue
+                not_found.append(line.employee_code or _("(empty)"))
+            else:
+                resolved_lines.append((line, employee))
+
+        if not_found:
+            missing_codes = list(dict.fromkeys(not_found))
+            missing_codes_text = ", ".join(missing_codes)
+            raise ValidationError(
+                _(
+                    "Cannot import data because the following Employee Code(s) "
+                    "were not found:\n%s"
+                )
+                % missing_codes_text
+            )
+
+        for line, employee in resolved_lines:
             existing = History.search([
                 ("employee_id", "=", employee.id),
                 ("year", "=", line.year),
             ], limit=1)
             vals = {
+                "salary": line.salary,
                 "date_att": line.date_att,
                 "over_leave_day": line.over_leave_day,
                 "update": now,
@@ -145,8 +170,6 @@ class ImportTigerSoft(models.Model):
                 inserted += 1
 
         message = _("Insert: %s รายการ, Update: %s รายการ") % (inserted, updated)
-        if not_found:
-            message += _("\nไม่พบ Employee Code: %s") % ", ".join(not_found)
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -161,7 +184,7 @@ class ImportTigerSoft(models.Model):
 
 class ImportTigerSoftLine(models.Model):
     _name = "ykk.kpi.import.tiger.soft.line"
-    _description = "Import Tiger Soft Line"
+    _description = "Import HR Data Line"
 
     import_id = fields.Many2one(
         "ykk.kpi.import.tiger.soft", required=True, ondelete="cascade"
@@ -171,6 +194,7 @@ class ImportTigerSoftLine(models.Model):
     employee_id = fields.Many2one("hr.employee", string="Employee")
     date_att = fields.Float(string="Date ATT")
     over_leave_day = fields.Float(string="Over Leave Day")
+    salary = fields.Float(string="Salary")
     action_type = fields.Selection(
         [("insert", "Insert"), ("update", "Update")], string="Action"
     )

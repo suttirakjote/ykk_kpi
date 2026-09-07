@@ -5,7 +5,7 @@
         <field name="name">ykk.kpi.department.bell.curve.search</field>
         <field name="model">ykk.kpi.department.bell.curve</field>
         <field name="arch" type="xml">
-            <search string="Department Bell Curve">
+            <search string="Grade Distribution">
                 <field name="name"/>
                 <field name="department_id"/>
                 <field name="period_id"/>
@@ -24,7 +24,7 @@
         <field name="name">ykk.kpi.department.bell.curve.list</field>
         <field name="model">ykk.kpi.department.bell.curve</field>
         <field name="arch" type="xml">
-            <list string="Department Bell Curve" sample="1">
+            <list string="Grade Distribution" sample="1">
                 <field name="name"/>
                 <field name="date"/>
                 <field name="department_id" optional="show"/>
@@ -40,7 +40,7 @@
         <field name="name">ykk.kpi.department.bell.curve.form</field>
         <field name="model">ykk.kpi.department.bell.curve</field>
         <field name="arch" type="xml">
-            <form string="Department Bell Curve">
+            <form string="Grade Distribution">
                 <header>
                     <button name="action_load_data" string="Load Data" type="object" class="btn-primary"/>
                 </header>
@@ -86,18 +86,18 @@
     </record>
 
     <record id="action_department_bell_curve" model="ir.actions.act_window">
-        <field name="name">Department Bell Curve</field>
+        <field name="name">Grade Distribution</field>
         <field name="res_model">ykk.kpi.department.bell.curve</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first Department Bell Curve.
+                Create your first Grade Distribution.
             </p>
         </field>
     </record>
 
     <menuitem id="menu_ykk_kpi_department_bell_curve"
-        name="Department Bell Curve"
+        name="Grade Distribution"
         parent="menu_ykk_kpi_evaluate"
         action="action_department_bell_curve"
         sequence="25"/>

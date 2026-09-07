@@ -5,7 +5,7 @@ from odoo.tools import float_compare
 
 class KpiAnnualKpi(models.Model):
     _name = "ykk.kpi.annual.kpi"
-    _description = "Annual KPI"
+    _description = "KPI/Goal Setting"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "id desc"
 
@@ -19,7 +19,7 @@ class KpiAnnualKpi(models.Model):
     group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Position", compute="_compute_employee_info", store=True, readonly=True, tracking=True)
     level_id = fields.Many2one("ykk.kpi.level", string="Job Level", compute="_compute_employee_info", store=True, readonly=True, tracking=True)
     department_id = fields.Many2one("hr.department", string="Department", compute="_compute_employee_info", store=True, readonly=True, tracking=True)
-    period_ids = fields.Many2many("ykk.kpi.period", string="Period", required=True, tracking=True)
+    period_id = fields.Many2one("ykk.kpi.period", string="Period", required=True, tracking=True)
     responsible_id = fields.Many2one("res.users", string="Responsible", default=lambda self: self.env.user)
     date = fields.Date(string='Date', default=fields.Date.context_today)
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
@@ -30,12 +30,24 @@ class KpiAnnualKpi(models.Model):
     attitude_line_ids = fields.One2many("ykk.kpi.annual.kpi.attitude.line", "annual_kpi_id", string="Attitude Evaluation")
 
     performance_weight = fields.Integer(string="Performance Evaluation", tracking=True)
+    indicator_weight = fields.Integer(string="Indicator Weight (%)", tracking=True)
     role_based_behavior_weight = fields.Integer(string="Role-based Behavior Evaluation", tracking=True)
     behavior_weight = fields.Integer(string="Behavior Evaluation", tracking=True)
     attitude_weight = fields.Integer(string="Attitude Evaluation", tracking=True)
     weight_total = fields.Integer(string="Sum %", compute="_compute_weight_total")
+    group_kpi_user = fields.Boolean(compute="_compute_group_kpi_user")
 
     template_id = fields.Many2one("ykk.kpi.template", string="KPI Template")
+
+    @api.depends_context("uid")
+    def _compute_group_kpi_user(self):
+        user = self.env.user
+        readonly_user = (
+            user.has_group("ykk_kpi.group_ykk_kpi_user")
+            and not user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        )
+        for record in self:
+            record.group_kpi_user = readonly_user
 
     @api.depends("performance_weight", "role_based_behavior_weight",
                  "behavior_weight", "attitude_weight")
@@ -53,10 +65,23 @@ class KpiAnnualKpi(models.Model):
             record.level_id = record.employee_id.ykk_kpi_level_id
             record.department_id = record.employee_id.department_id
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if "indicator_weight" not in vals and vals.get("employee_id"):
+                employee = self.env["hr.employee"].browse(vals["employee_id"])
+                vals["indicator_weight"] = (
+                    employee.ykk_kpi_level_id.indicator_weight
+                )
+        return super().create(vals_list)
+
     @api.onchange("employee_id")
     def _onchange_employee_id(self):
         for record in self:
             if record.employee_id:
+                record.indicator_weight = (
+                    record.employee_id.ykk_kpi_level_id.indicator_weight
+                )
                 template = self.env["ykk.kpi.template"].search(
                     [
                         ("employee_ids", "in", record.employee_id.id),
@@ -73,6 +98,7 @@ class KpiAnnualKpi(models.Model):
                 record._set_behavior_lines_from_hr_evaluation()
                 record._set_attitude_lines_from_hr_evaluation()
             else:
+                record.indicator_weight = 0
                 record.template_id = False
                 record._set_performance_lines_from_template(False)
                 record._set_role_lines_from_hr_evaluation()
@@ -198,9 +224,9 @@ class KpiAnnualKpi(models.Model):
 
 class KpiAnnualKpiPerformanceLine(models.Model):
     _name = "ykk.kpi.annual.kpi.performance.line"
-    _description = "Annual KPI Performance Evaluation Line"
+    _description = "KPI/Goal Setting Performance Evaluation Line"
 
-    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="Annual KPI", required=True, ondelete="cascade")
+    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting", required=True, ondelete="cascade")
     goal_id = fields.Many2one("ykk.kpi.goal", string="Goal", required=True)
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
@@ -236,9 +262,9 @@ class KpiAnnualKpiPerformanceLine(models.Model):
 
 class KpiAnnualKpiRoleLine(models.Model):
     _name = "ykk.kpi.annual.kpi.role.line"
-    _description = "Annual KPI Role-based Behavior Evaluation Line"
+    _description = "KPI/Goal Setting Role-based Behavior Evaluation Line"
 
-    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="Annual KPI", required=True, ondelete="cascade")
+    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting", required=True, ondelete="cascade")
     name = fields.Char(string="Goal", required=True)
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
@@ -247,9 +273,9 @@ class KpiAnnualKpiRoleLine(models.Model):
 
 class KpiAnnualKpiBehaviorLine(models.Model):
     _name = "ykk.kpi.annual.kpi.behavior.line"
-    _description = "Annual KPI Behavior Evaluation Line"
+    _description = "KPI/Goal Setting Behavior Evaluation Line"
 
-    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="Annual KPI", required=True, ondelete="cascade")
+    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting", required=True, ondelete="cascade")
     name = fields.Char(string="Goal", required=True)
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
@@ -258,9 +284,9 @@ class KpiAnnualKpiBehaviorLine(models.Model):
 
 class KpiAnnualKpiAttitudeLine(models.Model):
     _name = "ykk.kpi.annual.kpi.attitude.line"
-    _description = "Annual KPI Attitude Evaluation Line"
+    _description = "KPI/Goal Setting Attitude Evaluation Line"
 
-    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="Annual KPI", required=True, ondelete="cascade")
+    annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting", required=True, ondelete="cascade")
     name = fields.Char(string="Goal", required=True)
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
