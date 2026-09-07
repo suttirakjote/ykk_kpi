@@ -1,6 +1,6 @@
 # Salary Calculate — Developer Guide
 
-เอกสารนี้สรุปฟีเจอร์ **Salary Calculate** (การคำนวณปรับขึ้นเงินเดือนตามผล KPI) ที่พัฒนาเพิ่มในโมดูล `ykk_kpi_management`
+เอกสารนี้สรุปฟีเจอร์ **Salary Calculate** (การคำนวณปรับขึ้นเงินเดือนตามผล KPI) ที่พัฒนาเพิ่มในโมดูล `ykk_kpi`
 สำหรับ developer ที่จะเข้ามาดูแล/พัฒนาต่อ
 
 > **คอนเซปต์การพัฒนา:** โค้ดทั้งหมดถูกเพิ่มแบบ "ไม่แก้ไฟล์ของ dev หลักโดยตรง"
@@ -173,7 +173,7 @@ res.company.ykk_company_working_day → line.new_salary_month (daily)
 
 ## 7. ไฟล์ที่เกี่ยวข้อง (file map)
 ```
-ykk_kpi_management/
+ykk_kpi/
 ├── data/salary_calculate_data.xml          # ir.sequence
 ├── models/
 │   ├── salary_calculate.py                 # header + line + สูตรทั้งหมด + excel
@@ -213,7 +213,7 @@ ykk_kpi_management/
 ## 9. วิธี deploy / ทดสอบ
 ```bash
 # upgrade module
-docker compose exec odoo odoo -u ykk_kpi_management -d <db> --stop-after-init
+docker compose exec odoo odoo -u ykk_kpi -d <db> --stop-after-init
 docker compose restart odoo
 ```
 ทดสอบ: ตั้ง Max Salary/merit/att ที่ Level → ตั้งเงินเดือน/level/type ที่พนักงาน → สร้างเอกสาร Salary Calculate → กรอก Increase new % / If over Salary Range % → เพิ่มบรรทัดเลือกพนักงาน+grade → ตรวจค่าคำนวณ → Confirm → กด Excel New Salary

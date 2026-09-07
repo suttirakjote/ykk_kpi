@@ -2,7 +2,7 @@
 
 ## Overview
 
-`ykk_kpi_management` is an Odoo 18 module for managing KPI master data, KPI templates, annual KPI setup, and department evaluation records.
+`ykk_kpi` is an Odoo 18 module for managing KPI master data, KPI templates, annual KPI setup, and department evaluation records.
 
 The module adds a main application menu named **KPI Management** with three main sections:
 

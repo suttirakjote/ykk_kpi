@@ -48,12 +48,12 @@
     ],
     "assets": {
         "web.assets_backend": [
-            "ykk_kpi_management/static/src/scss/grade_grid.scss",
-            "ykk_kpi_management/static/src/scss/grade_board.scss",
-            "ykk_kpi_management/static/src/js/grade_grid_field.js",
-            "ykk_kpi_management/static/src/js/grade_board_field.js",
-            "ykk_kpi_management/static/src/xml/grade_grid_field.xml",
-            "ykk_kpi_management/static/src/xml/grade_board_field.xml",
+            "ykk_kpi/static/src/scss/grade_grid.scss",
+            "ykk_kpi/static/src/scss/grade_board.scss",
+            "ykk_kpi/static/src/js/grade_grid_field.js",
+            "ykk_kpi/static/src/js/grade_board_field.js",
+            "ykk_kpi/static/src/xml/grade_grid_field.xml",
+            "ykk_kpi/static/src/xml/grade_board_field.xml",
         ],
     },
     "application": True,
