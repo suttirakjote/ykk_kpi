@@ -39,14 +39,14 @@ class SalaryCalculate(models.Model):
     _inherit = "ykk.kpi.salary.calculate"
 
     def action_load_employee(self):
-        """โหลดพนักงานจาก Department KPI (period ตรง + evaluated)
+        """โหลดพนักงานจาก Evaluation (period ตรง + approved)
         และเซ็ต Grade ของบรรทัด = Adjust Grade ของเอกสารนั้น"""
         self.ensure_one()
         if not self.period_id:
             raise UserError(_("Please select a Period first."))
         department_kpis = self.env['ykk.kpi.department.kpi'].search([
             ('period_id', '=', self.period_id.id),
-            ('state', '=', 'evaluated'),
+            ('state', '=', 'approved'),
         ])
         History = self.env['ykk.kpi.employee.history']
         current_year = fields.Date.context_today(self).year
@@ -57,7 +57,7 @@ class SalaryCalculate(models.Model):
                 continue
             seen.add(kpi.employee_id.id)
             grade = kpi._get_adjust_grade_record()
-            # Over Leave Day = KPI History ของพนักงานปีปัจจุบัน (จาก Import Tiger Soft)
+            # Over Leave Day = KPI History ของพนักงานปีปัจจุบัน (จาก Import HR Data)
             history = History.search([
                 ('employee_id', '=', kpi.employee_id.id),
                 ('year', '=', current_year),
@@ -76,14 +76,14 @@ class BonusCalculate(models.Model):
     _inherit = "ykk.kpi.bonus.calculate"
 
     def action_load_employee(self):
-        """โหลดพนักงานจาก Department KPI (period ตรง + evaluated)
+        """โหลดพนักงานจาก Evaluation (period ตรง + approved)
         และเซ็ต Grade ของบรรทัด = Adjust Grade ของเอกสารนั้น"""
         self.ensure_one()
         if not self.period_id:
             raise UserError(_("Please select a Period first."))
         department_kpis = self.env['ykk.kpi.department.kpi'].search([
             ('period_id', '=', self.period_id.id),
-            ('state', '=', 'evaluated'),
+            ('state', '=', 'approved'),
         ])
         seen = set(self.line_ids.mapped('employee_id').ids)
         lines = []

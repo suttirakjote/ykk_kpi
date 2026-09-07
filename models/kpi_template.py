@@ -10,6 +10,7 @@ class KpiTemplate(models.Model):
     name = fields.Char(string="Name", default="New", required=True, readonly=True, copy=False)
     level_id = fields.Many2one("ykk.kpi.level", string="Job Level", required=True, tracking=True)
     department_id = fields.Many2one("hr.department", string="Department", required=True, tracking=True)
+    period_id = fields.Many2one("ykk.kpi.period", string="Period", tracking=True)
     remark = fields.Text(string="Remark", tracking=True)
     state = fields.Selection([
             ("draft", "Draft"),

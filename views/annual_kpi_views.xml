@@ -5,7 +5,7 @@
         <field name="name">ykk.kpi.annual.kpi.search</field>
         <field name="model">ykk.kpi.annual.kpi</field>
         <field name="arch" type="xml">
-            <search string="Annual KPI">
+            <search string="KPI/Goal Setting">
                 <field name="employee_id"/>
                 <field name="group_position_id"/>
                 <field name="level_id"/>
@@ -29,13 +29,13 @@
         <field name="name">ykk.kpi.annual.kpi.list</field>
         <field name="model">ykk.kpi.annual.kpi</field>
         <field name="arch" type="xml">
-            <list string="Annual KPI" sample="1">
+            <list string="KPI/Goal Setting" sample="1">
                 <field name="name"/>
                 <field name="employee_id" widget="many2one_avatar_employee"/>
                 <field name="group_position_id" optional="show"/>
                 <field name="level_id" optional="show"/>
                 <field name="department_id" optional="show"/>
-                <field name="period_ids" widget="many2many_tags" optional="show"/>
+                <field name="period_id" optional="show"/>
                 <field name="responsible_id" widget="many2one_avatar_user"/>
                 <field name="activity_ids" widget="list_activity"/>
                 <field name="state" widget="badge" 
@@ -50,12 +50,12 @@
         <field name="name">ykk.kpi.annual.kpi.form</field>
         <field name="model">ykk.kpi.annual.kpi</field>
         <field name="arch" type="xml">
-            <form string="Annual KPI">
+            <form string="KPI/Goal Setting">
                 <header>
-                    <button name="action_inprocess" string="Inprocess" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_done" string="Done" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
-                    <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancel'"/>
-                    <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
+                    <button name="action_inprocess" string="Inprocess" type="object" class="btn-primary" invisible="group_kpi_user or state != 'draft'"/>
+                    <button name="action_done" string="Done" type="object" class="btn-primary" invisible="group_kpi_user or state != 'inprocess'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="group_kpi_user or state == 'cancel'"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" invisible="group_kpi_user or state != 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,done"/>
                 </header>
                 <sheet>
@@ -64,15 +64,16 @@
                     </div>
                     <group>
                         <group>
-                            <field name="employee_id" widget="many2one_avatar_employee" options="{'no_create': True}" readonly="state == 'done'"/>
+                            <field name="group_kpi_user" invisible="1"/>
+                            <field name="employee_id" widget="many2one_avatar_employee" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'"/>
                             <field name="group_position_id" options="{'no_create': True}" readonly="1"/>
                             <field name="level_id" options="{'no_create': True}" readonly="1"/>
                             <field name="department_id" options="{'no_create': True}" readonly="1"/>
                         </group>
                         <group>
-                            <field name="template_id" options="{'no_create': True}" readonly="state == 'done'" domain="[('department_id', '=', department_id), ('active', '=', True)]"/>
-                            <field name="period_ids" widget="many2many_tags" options="{'no_create': True}" readonly="state == 'done'"/>
-                            <field name="date" readonly="state == 'done'"/>
+                            <field name="template_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'" domain="[('department_id', '=', department_id), ('active', '=', True)]"/>
+                            <field name="period_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'"/>
+                            <field name="date" readonly="group_kpi_user or state == 'done'"/>
                             <field name="responsible_id" invisible="1"/>
                         </group>
                     </group>
@@ -90,7 +91,7 @@
                             </field>
                         </page>
                         <page string="Role-based Behavior Evaluation">
-                            <field name="role_line_ids" readonly="state == 'done'">
+                            <field name="role_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
@@ -100,7 +101,7 @@
                             </field>
                         </page>
                         <page string="Behavior Evaluation">
-                            <field name="behavior_line_ids" readonly="state == 'done'">
+                            <field name="behavior_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
@@ -110,7 +111,7 @@
                             </field>
                         </page>
                         <page string="Attitude Evaluation">
-                            <field name="attitude_line_ids" readonly="state == 'done'">
+                            <field name="attitude_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
@@ -122,10 +123,11 @@
                         <page string="Other Info">
                             <group string="Indicator Weight">
                                 <group>
-                                    <field name="performance_weight" readonly="state == 'done'"/>
-                                    <field name="role_based_behavior_weight" readonly="state == 'done'"/>
-                                    <field name="behavior_weight" readonly="state == 'done'"/>
-                                    <field name="attitude_weight" readonly="state == 'done'"/>
+                                    <field name="indicator_weight" readonly="1"/>
+                                    <field name="performance_weight" readonly="group_kpi_user or state == 'done'"/>
+                                    <field name="role_based_behavior_weight" readonly="group_kpi_user or state == 'done'"/>
+                                    <field name="behavior_weight" readonly="group_kpi_user or state == 'done'"/>
+                                    <field name="attitude_weight" readonly="group_kpi_user or state == 'done'"/>
                                     <label for="weight_total" string="Sum %"/>
                                     <div>
                                         <field name="weight_total" class="text-success fw-bold" invisible="weight_total != 100"/>
@@ -142,18 +144,18 @@
     </record>
 
     <record id="action_annual_kpi" model="ir.actions.act_window">
-        <field name="name">Annual KPI</field>
+        <field name="name">KPI/Goal Setting</field>
         <field name="res_model">ykk.kpi.annual.kpi</field>
         <field name="view_mode">list,form,activity</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first Annual KPI.
+                Create your first KPI/Goal Setting.
             </p>
         </field>
     </record>
 
     <menuitem id="menu_ykk_kpi_annual_kpi"
-        name="Annual KPI"
+        name="KPI/Goal Setting"
         parent="menu_ykk_kpi_evaluate"
         action="action_annual_kpi"
         sequence="10"/>

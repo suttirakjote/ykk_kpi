@@ -31,9 +31,10 @@
             <list string="Periods" sample="1" editable="bottom" multi_edit="1">
                 <field name="name"/>
                 <field name="is_end_period"/>
-                <field name="start_date"/>
-                <field name="end_date"/>
-                <field name="period_type"/>
+                <field name="start_date" required="True"/>
+                <field name="end_date" required="True"/>
+                <field name="period_type" required="True"/>
+                <field name="suffix" required="True"/>
                 <field name="active"/>
             </list>
         </field>

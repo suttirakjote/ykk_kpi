@@ -11,11 +11,13 @@ access_ykk_kpi_level_user,ykk.kpi.level user,model_ykk_kpi_level,group_ykk_kpi_u
 access_ykk_kpi_level_admin,ykk.kpi.level administrator,model_ykk_kpi_level,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_period_user,ykk.kpi.period user,model_ykk_kpi_period,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_period_admin,ykk.kpi.period administrator,model_ykk_kpi_period,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_department_kpi_user,ykk.kpi.department.kpi user,model_ykk_kpi_department_kpi,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_sequence_setting_user,ykk.kpi.sequence.setting user,model_ykk_kpi_sequence_setting,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_sequence_setting_admin,ykk.kpi.sequence.setting administrator,model_ykk_kpi_sequence_setting,group_ykk_kpi_admin,1,1,1,1
+access_ykk_kpi_department_kpi_user,ykk.kpi.department.kpi user,model_ykk_kpi_department_kpi,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_admin,ykk.kpi.department.kpi administrator,model_ykk_kpi_department_kpi,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_kpi_summary_line_user,ykk.kpi.department.kpi.summary.line user,model_ykk_kpi_department_kpi_summary_line,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_department_kpi_summary_line_admin,ykk.kpi.department.kpi.summary.line administrator,model_ykk_kpi_department_kpi_summary_line,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_department_kpi_performance_line_user,ykk.kpi.department.kpi.performance.line user,model_ykk_kpi_department_kpi_performance_line,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_department_kpi_performance_line_user,ykk.kpi.department.kpi.performance.line user,model_ykk_kpi_department_kpi_performance_line,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_performance_line_admin,ykk.kpi.department.kpi.performance.line administrator,model_ykk_kpi_department_kpi_performance_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_kpi_role_line_user,ykk.kpi.department.kpi.role.line user,model_ykk_kpi_department_kpi_role_line,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_department_kpi_role_line_admin,ykk.kpi.department.kpi.role.line administrator,model_ykk_kpi_department_kpi_role_line,group_ykk_kpi_admin,1,1,1,1
@@ -24,9 +26,9 @@ access_ykk_kpi_department_kpi_behavior_line_admin,ykk.kpi.department.kpi.behavio
 access_ykk_kpi_department_kpi_attitude_line_user,ykk.kpi.department.kpi.attitude.line user,model_ykk_kpi_department_kpi_attitude_line,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_department_kpi_attitude_line_admin,ykk.kpi.department.kpi.attitude.line administrator,model_ykk_kpi_department_kpi_attitude_line,group_ykk_kpi_admin,1,1,1,1
 
-access_ykk_kpi_annual_kpi_user,ykk.kpi.annual.kpi user,model_ykk_kpi_annual_kpi,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_annual_kpi_user,ykk.kpi.annual.kpi user,model_ykk_kpi_annual_kpi,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_annual_kpi_admin,ykk.kpi.annual.kpi administrator,model_ykk_kpi_annual_kpi,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_annual_kpi_performance_line_user,ykk.kpi.annual.kpi.performance.line user,model_ykk_kpi_annual_kpi_performance_line,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_annual_kpi_performance_line_user,ykk.kpi.annual.kpi.performance.line user,model_ykk_kpi_annual_kpi_performance_line,group_ykk_kpi_user,1,1,1,1
 access_ykk_kpi_annual_kpi_performance_line_admin,ykk.kpi.annual.kpi.performance.line administrator,model_ykk_kpi_annual_kpi_performance_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_annual_kpi_role_line_user,ykk.kpi.annual.kpi.role.line user,model_ykk_kpi_annual_kpi_role_line,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_annual_kpi_role_line_admin,ykk.kpi.annual.kpi.role.line administrator,model_ykk_kpi_annual_kpi_role_line,group_ykk_kpi_admin,1,1,1,1
@@ -60,6 +62,8 @@ access_ykk_kpi_import_tiger_soft_line_user,ykk.kpi.import.tiger.soft.line user,m
 access_ykk_kpi_import_tiger_soft_line_admin,ykk.kpi.import.tiger.soft.line administrator,model_ykk_kpi_import_tiger_soft_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_template_document_user,ykk.kpi.template.document user,model_ykk_kpi_template_document,group_ykk_kpi_user,1,1,1,1
 access_ykk_kpi_template_document_admin,ykk.kpi.template.document administrator,model_ykk_kpi_template_document,group_ykk_kpi_admin,1,1,1,1
+access_ykk_kpi_template_document_line_user,ykk.kpi.template.document.line user,model_ykk_kpi_template_document_line,group_ykk_kpi_user,1,1,1,1
+access_ykk_kpi_template_document_line_admin,ykk.kpi.template.document.line administrator,model_ykk_kpi_template_document_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_bell_curve_user,ykk.kpi.department.bell.curve user,model_ykk_kpi_department_bell_curve,group_ykk_kpi_user,1,1,1,1
 access_ykk_kpi_department_bell_curve_admin,ykk.kpi.department.bell.curve administrator,model_ykk_kpi_department_bell_curve,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_bell_curve_line_user,ykk.kpi.department.bell.curve.line user,model_ykk_kpi_department_bell_curve_line,group_ykk_kpi_user,1,1,1,1

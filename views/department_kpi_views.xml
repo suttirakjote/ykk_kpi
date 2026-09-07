@@ -5,14 +5,13 @@
         <field name="name">ykk.kpi.department.kpi.search</field>
         <field name="model">ykk.kpi.department.kpi</field>
         <field name="arch" type="xml">
-            <search string="Department KPI">
+            <search string="Evaluation">
                 <field name="employee_id"/>
                 <field name="group_position_id"/>
                 <field name="level_id"/>
                 <field name="department_id"/>
                 <field name="period_id"/>
                 <field name="responsible_id"/>
-                <field name="state"/>
                 <separator/>
                 <filter string="Date" name="date" date="date"/>
                 <group expand="0" string="Group By">
@@ -33,7 +32,14 @@
         <field name="name">ykk.kpi.department.kpi.list</field>
         <field name="model">ykk.kpi.department.kpi</field>
         <field name="arch" type="xml">
-            <list string="Department KPI" sample="1">
+            <list string="Evaluation" sample="1">
+                <header>
+                    <button name="action_approve"
+                        string="Select Approve"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_approve"/>
+                </header>
                 <field name="name"/>
                 <field name="employee_id" widget="many2one_avatar_employee"/>
                 <field name="group_position_id" optional="show"/>
@@ -45,8 +51,8 @@
                 <field name="activity_ids" widget="list_activity"/>
                 <field name="state" widget="badge"
                     decoration-info="state == 'draft'"
-                    decoration-warning="state == 'inprocess'"
-                    decoration-success="state == 'evaluated'"/>
+                    decoration-warning="state in ['inprocess', 'evaluated']"
+                    decoration-success="state == 'approved'"/>
             </list>
         </field>
     </record>
@@ -55,12 +61,19 @@
         <field name="name">ykk.kpi.department.kpi.form</field>
         <field name="model">ykk.kpi.department.kpi</field>
         <field name="arch" type="xml">
-            <form string="Department KPI">
+            <form string="Evaluation">
                 <header>
-                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_done" string="Done" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
-                    <button name="action_cancel" string="Cancel" type="object" invisible="state not in ('draft', 'inprocess')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,evaluated"/>
+                    <button name="action_confirm" string="1st Evaluate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_done" string="2nd Evaluate" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
+                    <button name="action_approve"
+                        string="Approve"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_approve"
+                        invisible="state != 'evaluated'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state == 'draft'"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,evaluated,approved"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -70,16 +83,17 @@
                     </div>
                     <group>
                         <group>
-                            <field name="employee_id" widget="many2one_avatar_employee" options="{'no_create': True}"/>
+                            <field name="group_kpi_user" invisible="1"/>
+                            <field name="employee_id" widget="many2one_avatar_employee" options="{'no_create': True}" readonly="group_kpi_user"/>
                             <field name="group_position_id" options="{'no_create': True}" readonly="1"/>
                             <field name="level_id" options="{'no_create': True}" readonly="1"/>
                             <field name="department_id" options="{'no_create': True}" readonly="1"/>
                         </group>
                         <group>
-                            <field name="period_id" options="{'no_create': True}"/>
-                            <field name="date"/>
+                            <field name="period_id" options="{'no_create': True}" readonly="group_kpi_user"/>
+                            <field name="date" readonly="group_kpi_user"/>
                             <!-- <field name="responsible_id" widget="many2one_avatar_user" options="{'no_create': True}"/> -->
-                            <field name="annual_id" options="{'no_create': True}"/>
+                            <field name="annual_id" options="{'no_create': True}" readonly="group_kpi_user"/>
                             <field name="total_score"/>
                         </group>
                     </group>
@@ -87,18 +101,28 @@
                         <page string="Performance Evaluation">
                             <field name="performance_line_ids">
                                 <list editable="bottom">
-                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <field name="group_kpi_user" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"
+                                        readonly="group_kpi_user"/>
                                     <button name="action_view_goal" type="object" icon="fa-search"
                                         title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria"/>
-                                    <field name="weight" sum="Total Weight"/>
-                                    <field name="comment_employee"/>
-                                    <field name="performance_result"/>
-                                    <field name="first_evaluator_comment"/>
-                                    <field name="first_evaluator_score"/>
-                                    <field name="comment_second_evaluator"/>
-                                    <field name="second_evaluator_score"/>
-                                    <field name="total_score"/>
+                                    <field name="achievement_criteria" readonly="group_kpi_user"/>
+                                    <field name="weight" sum="Total Weight"
+                                        readonly="group_kpi_user"/>
+                                    <field name="comment_employee"
+                                        readonly="group_kpi_user and evaluation_state != 'draft'"/>
+                                    <field name="performance_result"
+                                        readonly="group_kpi_user and evaluation_state != 'draft'"/>
+                                    <field name="first_evaluator_comment"
+                                        readonly="group_kpi_user and evaluation_state != 'inprocess'"/>
+                                    <field name="first_evaluator_score"
+                                        readonly="group_kpi_user and evaluation_state != 'inprocess'"/>
+                                    <field name="comment_second_evaluator"
+                                        readonly="group_kpi_user and evaluation_state != 'evaluated'"/>
+                                    <field name="second_evaluator_score"
+                                        readonly="group_kpi_user and evaluation_state != 'evaluated'"/>
+                                    <field name="total_score" readonly="group_kpi_user"/>
                                 </list>
                             </field>
                         </page>
@@ -177,6 +201,9 @@
                                 </group>
                             </group>
                         </page>
+                        <page name="description_page" string="Description">
+                            <field name="description" type="html" options="{'collaborative': true, 'resizable': false}" placeholder="Add a description..."/>
+                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>
@@ -185,18 +212,18 @@
     </record>
 
     <record id="action_department_kpi" model="ir.actions.act_window">
-        <field name="name">Department KPI</field>
+        <field name="name">Evaluation</field>
         <field name="res_model">ykk.kpi.department.kpi</field>
         <field name="view_mode">list,form,activity</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first Department KPI.
+                Create your first Evaluation.
             </p>
         </field>
     </record>
 
     <menuitem id="menu_ykk_kpi_department_kpi"
-        name="Department KPI"
+        name="Evaluation"
         parent="menu_ykk_kpi_evaluate"
         action="action_department_kpi"
         sequence="20"/>

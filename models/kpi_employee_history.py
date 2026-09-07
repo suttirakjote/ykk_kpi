@@ -13,3 +13,4 @@ class KpiEmployeeHistory(models.Model):
     date_att = fields.Float(string="Date ATT")
     over_leave_day = fields.Float(string="Over Leave Day")
     update = fields.Datetime(string="Update")     # วัน-เวลาที่ upload ไฟล์เข้าระบบ
+    salary = fields.Float(string="Salary")

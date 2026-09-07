@@ -37,7 +37,7 @@ class KpiAdjustment(models.Model):
         compute='_compute_changed_count', string='Changed')
 
     department_kpi_count = fields.Integer(
-        compute='_compute_department_kpi_count', string='Department KPI')
+        compute='_compute_department_kpi_count', string='Evaluation')
 
     @api.depends('line_ids.is_changed')
     def _compute_changed_count(self):
@@ -50,12 +50,12 @@ class KpiAdjustment(models.Model):
             rec.department_kpi_count = len(rec.line_ids.mapped('department_kpi_id'))
 
     def action_view_department_kpi(self):
-        """Smart button: เปิดเอกสาร Department KPI ที่ถูกอ้างอิงในบรรทัด"""
+        """Smart button: เปิดเอกสาร Evaluation ที่ถูกอ้างอิงในบรรทัด"""
         self.ensure_one()
         kpis = self.line_ids.mapped('department_kpi_id')
         action = {
             'type': 'ir.actions.act_window',
-            'name': _('Department KPI'),
+            'name': _('Evaluation'),
             'res_model': 'ykk.kpi.department.kpi',
             'domain': [('id', 'in', kpis.ids)],
             'view_mode': 'list,form',
@@ -73,7 +73,7 @@ class KpiAdjustment(models.Model):
         return super().create(vals_list)
 
     def action_populate_employees(self):
-        """โหลดข้อมูลจากเอกสาร Department KPI ที่:
+        """โหลดข้อมูลจากเอกสาร Evaluation ที่:
         - period_id ตรงกับ KPI Period ของเอกสารนี้
         - status = evaluated
         แล้วเอา Overall Grade ของแต่ละเอกสารมาเป็น current_grade"""
@@ -136,7 +136,7 @@ class KpiAdjustmentLine(models.Model):
     period_id = fields.Many2one(
         related='adjustment_id.period_id', store=True)
 
-    # Current Grade = Overall Grade ของเอกสาร Department KPI (Document Ref)
+    # Current Grade = Overall Grade ของเอกสาร Evaluation (Document Ref)
     current_grade = fields.Selection(
         GRADE_SELECTION, string='Current Grade',
         compute='_compute_current_grade', store=True, readonly=True)

@@ -61,6 +61,13 @@
                         </group>
                     </group>
                     <notebook>
+                        <page string="Job Levels">
+                            <field name="level_ids" nolabel="1" options="{'no_create': True}">
+                                <list>
+                                    <field name="name"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Behavior Evaluation">
                             <field name="achievement_criteria" nolabel="1" placeholder="Add a criteria..."/>
                         </page>

@@ -48,7 +48,7 @@
                         <button class="oe_stat_button" icon="fa-list-alt"
                                 type="object" name="action_view_department_kpi">
                             <field name="department_kpi_count" widget="statinfo"
-                                   string="Department KPI"/>
+                                   string="Evaluation"/>
                         </button>
                     </div>
                     <div class="oe_title">

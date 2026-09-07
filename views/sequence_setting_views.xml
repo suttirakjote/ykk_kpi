@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_sequence_setting_search" model="ir.ui.view">
+        <field name="name">ykk.kpi.sequence.setting.search</field>
+        <field name="model">ykk.kpi.sequence.setting</field>
+        <field name="arch" type="xml">
+            <search string="Sequence Setting">
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="menu"/>
+                <field name="sequence_id"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_department" string="Department" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_by_menu" string="Menu" context="{'group_by': 'menu'}"/>
+                    <filter name="group_by_sequence" string="Sequence" context="{'group_by': 'sequence_id'}"/>
+                    <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_sequence_setting_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.sequence.setting.list</field>
+        <field name="model">ykk.kpi.sequence.setting</field>
+        <field name="arch" type="xml">
+            <list string="Sequence Setting" sample="1" editable="bottom" multi_edit="1">
+                <field name="name" required="1"/>
+                <field name="department_id" options="{'no_create': True}" required="1"/>
+                <field name="menu" required="1"/>
+                <field name="sequence_id" options="{'no_create': True}" required="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_ykk_kpi_sequence_setting" model="ir.actions.act_window">
+        <field name="name">Sequence Setting</field>
+        <field name="res_model">ykk.kpi.sequence.setting</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_ykk_kpi_sequence_setting_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Sequence Setting.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_sequence_setting"
+        name="Sequence Setting"
+        parent="menu_ykk_kpi_configuration"
+        action="action_ykk_kpi_sequence_setting"
+        sequence="3"/>
+
+</odoo>
