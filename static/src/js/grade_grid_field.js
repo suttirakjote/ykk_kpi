@@ -57,13 +57,12 @@ export class KpiGradeGridField extends Component {
     }
 }
 
+// หมายเหตุ: ห้ามใช้ relatedFields ที่นี่
+// ฟอร์มนี้วาง line_ids ไว้ 3 ที่ (list ปกติ + grid + board) Odoo จะ merge
+// field description ของทั้ง 3 เข้าด้วยกัน โดย relatedFields เป็น object ที่ไม่มี
+// key "string" จึงไปทับ label ของฟิลด์จริง ทำให้หัวตารางในแท็บ Grade Lines หายไป
+// จึงประกาศฟิลด์ที่ widget ต้องใช้เป็น inline <list> ในไฟล์ view แทน
 registry.category("fields").add("kpi_grade_grid", {
     component: KpiGradeGridField,
     supportedTypes: ["one2many"],
-    relatedFields: [
-        { name: "employee_id", type: "many2one" },
-        { name: "department_id", type: "many2one" },
-        { name: "current_grade", type: "selection", selection: GRADES.map((g) => [g, g]) },
-        { name: "new_grade", type: "selection", selection: GRADES.map((g) => [g, g]) },
-    ],
 });

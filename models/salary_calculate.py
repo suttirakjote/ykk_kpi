@@ -142,14 +142,14 @@ class SalaryCalculateLine(models.Model):
     level_id = fields.Many2one(
         "ykk.kpi.level",
         string="Job Level",
-        compute="_compute_from_employee",
+        compute="_compute_level_id",
         store=True,
         readonly=False,
     )
     department_id = fields.Many2one(
         "hr.department",
         string="Department",
-        compute="_compute_from_employee",
+        compute="_compute_department_id",
         store=True,
         readonly=False,
     )
@@ -160,7 +160,7 @@ class SalaryCalculateLine(models.Model):
     )
     current_salary = fields.Float(
         string="Current Salary",
-        compute="_compute_from_employee",
+        compute="_compute_current_salary",
         store=True,
         readonly=False,
     )
@@ -188,13 +188,13 @@ class SalaryCalculateLine(models.Model):
     # default มาตาม Level (แก้ไขได้) - ค่าเป็น %
     merit = fields.Float(
         string="Merit%",
-        compute="_compute_from_level",
+        compute="_compute_merit",
         store=True,
         readonly=False,
     )
     att = fields.Float(
         string="Att%",
-        compute="_compute_from_level",
+        compute="_compute_att",
         store=True,
         readonly=False,
     )
@@ -250,18 +250,32 @@ class SalaryCalculateLine(models.Model):
         store=True,
     )
 
+    # หมายเหตุ: แยก compute ทีละฟิลด์ ห้ามรวมหลายฟิลด์ไว้ในเมธอดเดียว
+    # เพราะถ้าส่งค่าฟิลด์ใดฟิลด์หนึ่งมาใน create() Odoo จะข้าม compute
+    # ของ "ทุกฟิลด์ที่ใช้เมธอดเดียวกัน" ทำให้ฟิลด์ที่เหลือว่างเปล่า
     @api.depends("employee_id")
-    def _compute_from_employee(self):
+    def _compute_level_id(self):
         for line in self:
-            employee = line.employee_id
-            line.level_id = employee.ykk_kpi_level_id
-            line.department_id = employee.department_id
-            line.current_salary = employee.ykk_kpi_salary
+            line.level_id = line.employee_id.ykk_kpi_level_id
+
+    @api.depends("employee_id")
+    def _compute_department_id(self):
+        for line in self:
+            line.department_id = line.employee_id.department_id
+
+    @api.depends("employee_id")
+    def _compute_current_salary(self):
+        for line in self:
+            line.current_salary = line.employee_id.ykk_kpi_salary
 
     @api.depends("level_id")
-    def _compute_from_level(self):
+    def _compute_merit(self):
         for line in self:
             line.merit = line.level_id.merit
+
+    @api.depends("level_id")
+    def _compute_att(self):
+        for line in self:
             line.att = line.level_id.att
 
     @api.depends("cal_by_grade", "grade_id.plus_minus")

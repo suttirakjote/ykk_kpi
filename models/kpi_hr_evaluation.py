@@ -1,10 +1,11 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class KpiHrEvaluation(models.Model):
     _name = "ykk.kpi.hr.evaluation"
     _description = "Human Resource Evaluation"
     _order = "id desc"
+    _rec_names_search = ["code", "name"]
 
     code = fields.Char(string="Code", required=True)
     name = fields.Char(string="Name", required=True)
@@ -32,5 +33,10 @@ class KpiHrEvaluation(models.Model):
 
     _sql_constraints = [
         ("code_company_unique", "unique(code, company_id)", "The code must be unique per company."),
-        ("name_company_unique", "unique(name, company_id)", "The name must be unique per company."),
     ]
+
+    @api.depends("code", "name")
+    def _compute_display_name(self):
+        """แสดงเป็น [Code] Name ทุกที่ที่อ้างถึง HR Evaluation"""
+        for record in self:
+            record.display_name = "[%s] %s" % (record.code, record.name) if record.code else record.name

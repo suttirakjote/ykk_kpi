@@ -336,14 +336,9 @@ export class KpiGradeBoardField extends Component {
     }
 }
 
+// หมายเหตุ: ห้ามใช้ relatedFields ที่นี่ (เหตุผลเดียวกับ grade_grid_field.js)
+// ฟิลด์ที่ widget ต้องใช้ ประกาศเป็น inline <list> ในไฟล์ view แทน
 registry.category("fields").add("kpi_grade_board", {
     component: KpiGradeBoardField,
     supportedTypes: ["one2many"],
-    relatedFields: [
-        { name: "employee_id", type: "many2one" },
-        { name: "department_id", type: "many2one" },
-        { name: "department_kpi_id", type: "many2one" },
-        { name: "current_grade", type: "selection", selection: GRADES.map((g) => [g, g]) },
-        { name: "new_grade", type: "selection", selection: GRADES.map((g) => [g, g]) },
-    ],
 });

@@ -137,7 +137,7 @@ class KpiAnnualKpi(models.Model):
                 )
                 role_line_commands.extend([
                     (0, 0, {
-                        "name": evaluation.name,
+                        "name": evaluation.display_name,
                         "achievement_criteria": evaluation.achievement_criteria,
                         "criteria_details": evaluation.criteria_details,
                     })
@@ -161,7 +161,7 @@ class KpiAnnualKpi(models.Model):
                 )
                 behavior_line_commands.extend([
                     (0, 0, {
-                        "name": evaluation.name,
+                        "name": evaluation.display_name,
                         "achievement_criteria": evaluation.achievement_criteria,
                         "criteria_details": evaluation.criteria_details,
                     })
@@ -185,7 +185,7 @@ class KpiAnnualKpi(models.Model):
                 )
                 attitude_line_commands.extend([
                     (0, 0, {
-                        "name": evaluation.name,
+                        "name": evaluation.display_name,
                         "achievement_criteria": evaluation.achievement_criteria,
                         "criteria_details": evaluation.criteria_details,
                     })
