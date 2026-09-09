@@ -27,4 +27,10 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
+    <record id="group_ykk_kpi_adjustment" model="res.groups">
+        <field name="name">KPI Adjustment</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
 </odoo>

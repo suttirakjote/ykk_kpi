@@ -24,7 +24,7 @@
         <field name="name">ykk.kpi.sequence.setting.list</field>
         <field name="model">ykk.kpi.sequence.setting</field>
         <field name="arch" type="xml">
-            <list string="Sequence Setting" sample="1" editable="bottom" multi_edit="1">
+            <list string="Sequence Setting" sample="1" editable="top" multi_edit="1">
                 <field name="name" required="1"/>
                 <field name="department_id" options="{'no_create': True}" required="1"/>
                 <field name="menu" required="1"/>

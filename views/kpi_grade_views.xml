@@ -18,7 +18,7 @@
         <field name="name">ykk.kpi.grade.list</field>
         <field name="model">ykk.kpi.grade</field>
         <field name="arch" type="xml">
-            <list string="Grades" sample="1" editable="bottom" multi_edit="1">
+            <list string="Grades" sample="1" editable="top" multi_edit="1">
                 <field name="code"/>
                 <field name="name"/>
                 <field name="start_score"/>

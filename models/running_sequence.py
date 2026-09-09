@@ -174,4 +174,8 @@ class KpiDepartmentKpi(models.Model):
                     if period.suffix
                     else sequence_number
                 )
-        return super().create(vals_list)
+                
+        res = super().create(vals_list)
+        for rec in res:
+            rec.action_first_evaluate_activity()
+        return res

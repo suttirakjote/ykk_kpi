@@ -1,5 +1,6 @@
 from . import kpi_goal
 from . import kpi_hr_evaluation
+from . import evaluation_rule
 from . import kpi_grade
 from . import kpi_group_position
 from . import kpi_level

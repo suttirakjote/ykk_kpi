@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, ValidationError, UserError
 
 class KpiDepartmentKpi(models.Model):
     _name = "ykk.kpi.department.kpi"
@@ -49,6 +49,9 @@ class KpiDepartmentKpi(models.Model):
     overall_grade_id = fields.Many2one("ykk.kpi.grade", string="Overall Grade", compute="_compute_overall_grade")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     group_kpi_user = fields.Boolean(compute="_compute_group_kpi_user")
+    can_edit_employee = fields.Boolean(compute="_compute_evaluation_permissions")
+    can_edit_first_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
+    can_edit_second_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
 
     # Indicator Weight (read-only) ดึงจาก KPI/Goal Setting ที่อ้างอิง - แสดงใน tab Summary
     performance_weight = fields.Integer(related="annual_id.performance_weight", string="Performance Evaluation", readonly=True)
@@ -68,18 +71,21 @@ class KpiDepartmentKpi(models.Model):
         for record in self:
             record.group_kpi_user = readonly_user
 
+    @api.depends("employee_id.user_id", "company_id")
+    @api.depends_context("uid")
+    def _compute_evaluation_permissions(self):
+        current_user = self.env.user
+        for record in self:
+            rule = record._get_evaluation_rule()
+            record.can_edit_employee = bool(rule and rule.user_id == current_user)
+            record.can_edit_first_evaluator = bool(rule and rule.first_evaluator_id == current_user)
+            record.can_edit_second_evaluator = bool(rule and rule.second_evaluator_id == current_user)
+
     @api.model
     def _validate_unique_employee_period(self, employee_id, period_id):
         if not employee_id or not period_id:
             return
-
-        duplicate = self.search(
-            [
-                ("employee_id", "=", employee_id),
-                ("period_id", "=", period_id),
-            ],
-            limit=1,
-        )
+        duplicate = self.search([("employee_id", "=", employee_id), ("period_id", "=", period_id)], limit=1)
         if duplicate:
             raise ValidationError(
                 _(
@@ -125,9 +131,18 @@ class KpiDepartmentKpi(models.Model):
             record.group_position_id = record.employee_id.ykk_kpi_group_position_id
             record.level_id = record.employee_id.ykk_kpi_level_id
             record.department_id = record.employee_id.department_id
-    
+
     def action_confirm(self):
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        if rule_id.first_evaluator_id != self.env.user:
+            raise UserError(
+                _("You do not have permission as the First Evaluator.")
+            )
+        # Update State and Activity
+        self.activity_update()
         self.write({"state": "inprocess"})
+        self.action_second_evaluate_activity()
 
     def action_done(self):
         for record in self:
@@ -145,22 +160,106 @@ class KpiDepartmentKpi(models.Model):
                 raise ValidationError(
                     _("Weight ต้องเท่ากับ 100%% ก่อนกด Done:\n- %s") % "\n- ".join(errors)
                 )
+        # Update State and Activity
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        if rule_id.second_evaluator_id != self.env.user:
+            raise UserError(
+                _("You do not have permission as the Second Evaluator.")
+            )
+        self.activity_update()
         self.write({"state": "evaluated"})
 
     def action_approve(self):
-        if not self.env.user.has_group("ykk_kpi.group_ykk_kpi_approve"):
-            raise AccessError(_("You do not have permission to approve Evaluations."))
-        invalid_records = self.filtered(lambda record: record.state != "evaluated")
-        if invalid_records:
-            raise ValidationError(_("Only Evaluations in the 2nd Evaluate status can be approved."))
-        self.write({"state": "approved"})
+        records_to_approve = self.filtered(lambda record: record.state == "evaluated")
+        updated_count = len(records_to_approve)
+        skipped_count = len(self) - updated_count
+        if records_to_approve:
+            records_to_approve.write({"state": "approved"})
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Select Approve Summary"),
+                "message": _(
+                    "Updated successfully: %(updated)s record(s).\n"
+                    "Skipped: %(skipped)s record(s).",
+                    updated=updated_count,
+                    skipped=skipped_count,
+                ),
+                "type": "success" if not skipped_count else "warning",
+                "sticky": False,
+                "next": {
+                    "type": "ir.actions.client",
+                    "tag": "soft_reload",
+                },
+            },
+        }
 
     def action_cancel(self):
         self.write({"state": "cancel"})
+        self.activity_update()
 
     def action_draft(self):
         self.write({"state": "draft"})
-    
+
+    def _get_evaluation_rule(self):
+        self.ensure_one()
+        employee_user = self.employee_id.user_id
+        if not employee_user:
+            return self.env["ykk.kpi.evaluation.rule"]
+
+        return self.env["ykk.kpi.evaluation.rule"].search(
+            [
+                ("user_id", "=", employee_user.id),
+                ("company_id", "=", self.company_id.id),
+                ("active", "=", True),
+            ],
+            order="id desc",
+            limit=1,
+        )
+
+    def _check_evaluation_rule(self):
+        rule_id = self._get_evaluation_rule()
+        if not rule_id:
+            raise ValidationError(_("Please configure the Evaluation Rule."))
+
+    def action_first_evaluate_activity(self):
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        model_id = self.env['ir.model']._get(self._name).id
+        self.activity_schedule('ykk_kpi.mail_activity_first_evaluator_to_validate',
+            summary='First To Validate',
+            automated=True,
+            res_id=self.id,
+            res_model_id=model_id,
+            user_id=rule_id.first_evaluator_id.id,
+            date_deadline= fields.Date.today())
+
+    def action_second_evaluate_activity(self):
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        model_id = self.env['ir.model']._get(self._name).id
+        self.activity_schedule('ykk_kpi.mail_activity_second_evaluator_to_validate',
+            summary='Second To Validate',
+            automated=True,
+            res_id=self.id,
+            res_model_id=model_id,
+            user_id=rule_id.second_evaluator_id.id,
+            date_deadline= fields.Date.today())
+
+    def _get_activity_feedback(self):
+        return ['inprocess', 'evaluated']
+
+    def _get_activity_unlink(self):
+        return ['cancel']
+
+    def activity_update(self):
+        self.filtered(lambda x: x.state in self._get_activity_feedback()).activity_feedback(
+            ['ykk_kpi.mail_activity_first_evaluator_to_validate', 'ykk_kpi.mail_activity_second_evaluator_to_validate'])
+        self.filtered(lambda x: x.state in self._get_activity_unlink()).activity_unlink(
+            ['ykk_kpi.mail_activity_first_evaluator_to_validate', 'ykk_kpi.mail_activity_second_evaluator_to_validate'])
+
     # -----------------------------------------------------
     # Calculate Grade
     # -----------------------------------------------------
@@ -269,12 +368,7 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     _description = "KPI Evaluation Performance Line"
 
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
-    evaluation_state = fields.Selection(
-        related="department_kpi_id.state",
-        string="Evaluation Status",
-        readonly=True,
-    )
-    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
+    evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     goal_id = fields.Many2one("ykk.kpi.goal", string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -285,6 +379,11 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
+    can_edit_employee = fields.Boolean(related="department_kpi_id.can_edit_employee")
+    can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
+    can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
     @api.depends_context("uid")
     def _compute_group_kpi_user(self):
@@ -340,6 +439,7 @@ class KpiDepartmentKpiRoleLine(models.Model):
     _description = "KPI Evaluation Role-based Behavior Evaluation Line"
 
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
+    evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -350,6 +450,11 @@ class KpiDepartmentKpiRoleLine(models.Model):
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
+    can_edit_employee = fields.Boolean(related="department_kpi_id.can_edit_employee")
+    can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
+    can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
     @api.depends("second_evaluator_score", "weight")
     def _compute_total_score(self):
@@ -368,6 +473,7 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     _description = "KPI Evaluation Behavior Evaluation Line"
 
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
+    evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -378,6 +484,11 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
+    can_edit_employee = fields.Boolean(related="department_kpi_id.can_edit_employee")
+    can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
+    can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
     @api.depends("second_evaluator_score", "weight")
     def _compute_total_score(self):
@@ -396,6 +507,7 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     _description = "KPI Evaluation Attitude Evaluation Line"
 
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
+    evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
@@ -406,6 +518,11 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
     second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
+    can_edit_employee = fields.Boolean(related="department_kpi_id.can_edit_employee")
+    can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
+    can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
     @api.depends("second_evaluator_score", "weight")
     def _compute_total_score(self):

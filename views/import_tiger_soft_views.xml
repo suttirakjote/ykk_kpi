@@ -65,7 +65,7 @@
 
     <menuitem id="menu_ykk_kpi_import_tiger_soft"
         name="Import HR Data"
-        parent="menu_kpi_adjustment_root"
+        parent="menu_ykk_kpi_import"
         action="action_import_tiger_soft"
         sequence="40"/>
 

@@ -72,7 +72,7 @@
                         <page string="Grade Lines">
                             <field name="line_ids"
                                    readonly="state != 'draft'">
-                                <list editable="bottom"
+                                <list editable="top"
                                       decoration-danger="is_changed == True">
                                     <field name="department_id"/>
                                     <field name="employee_id"/>

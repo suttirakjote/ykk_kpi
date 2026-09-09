@@ -32,17 +32,19 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
-                    <group string="Page Setup" col="4">
-                        <field name="font_size"/>
-                        <field name="show_company_header"/>
-                        <field name="show_page_number"/>
+                    <group string="Page Setup">
+                        <group>
+                            <field name="font_size"/>
+                            <field name="show_company_header"/>
+                            <field name="show_page_number"/>
+                        </group>
                     </group>
                     <!-- render_model ใช้บอก widget dynamic placeholder ว่าอ้างอิง model ไหน -->
                     <field name="render_model" invisible="1"/>
                     <notebook>
                         <page string="Employees" name="employees">
                             <field name="line_ids">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="employee_id" options="{'no_create': True}"/>
                                     <field name="employee_thai_name" optional="show"/>
                                     <field name="department_id" optional="hide"/>

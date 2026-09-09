@@ -36,7 +36,7 @@
                     </group>
                     <group string="KPI History">
                         <field name="ykk_kpi_history_ids" nolabel="1">
-                            <list editable="bottom">
+                            <list editable="top">
                                 <field name="year"/>
                                 <field name="salary"/>
                                 <field name="date_att"/>

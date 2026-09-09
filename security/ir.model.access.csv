@@ -3,6 +3,8 @@ access_ykk_kpi_goal_user,ykk.kpi.goal user,model_ykk_kpi_goal,group_ykk_kpi_user
 access_ykk_kpi_goal_admin,ykk.kpi.goal administrator,model_ykk_kpi_goal,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_hr_evaluation_user,ykk.kpi.hr.evaluation user,model_ykk_kpi_hr_evaluation,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_hr_evaluation_admin,ykk.kpi.hr.evaluation administrator,model_ykk_kpi_hr_evaluation,group_ykk_kpi_admin,1,1,1,1
+access_ykk_kpi_evaluation_rule_user,ykk.kpi.evaluation.rule user,model_ykk_kpi_evaluation_rule,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_evaluation_rule_admin,ykk.kpi.evaluation.rule administrator,model_ykk_kpi_evaluation_rule,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_grade_user,ykk.kpi.grade user,model_ykk_kpi_grade,group_ykk_kpi_user,1,0,0,0
 access_ykk_kpi_grade_admin,ykk.kpi.grade administrator,model_ykk_kpi_grade,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_group_position_user,ykk.kpi.group.position user,model_ykk_kpi_group_position,group_ykk_kpi_user,1,0,0,0
@@ -19,11 +21,11 @@ access_ykk_kpi_department_kpi_summary_line_user,ykk.kpi.department.kpi.summary.l
 access_ykk_kpi_department_kpi_summary_line_admin,ykk.kpi.department.kpi.summary.line administrator,model_ykk_kpi_department_kpi_summary_line,group_ykk_kpi_admin,1,1,1,1
 access_ykk_kpi_department_kpi_performance_line_user,ykk.kpi.department.kpi.performance.line user,model_ykk_kpi_department_kpi_performance_line,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_performance_line_admin,ykk.kpi.department.kpi.performance.line administrator,model_ykk_kpi_department_kpi_performance_line,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_department_kpi_role_line_user,ykk.kpi.department.kpi.role.line user,model_ykk_kpi_department_kpi_role_line,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_department_kpi_role_line_user,ykk.kpi.department.kpi.role.line user,model_ykk_kpi_department_kpi_role_line,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_role_line_admin,ykk.kpi.department.kpi.role.line administrator,model_ykk_kpi_department_kpi_role_line,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_department_kpi_behavior_line_user,ykk.kpi.department.kpi.behavior.line user,model_ykk_kpi_department_kpi_behavior_line,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_department_kpi_behavior_line_user,ykk.kpi.department.kpi.behavior.line user,model_ykk_kpi_department_kpi_behavior_line,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_behavior_line_admin,ykk.kpi.department.kpi.behavior.line administrator,model_ykk_kpi_department_kpi_behavior_line,group_ykk_kpi_admin,1,1,1,1
-access_ykk_kpi_department_kpi_attitude_line_user,ykk.kpi.department.kpi.attitude.line user,model_ykk_kpi_department_kpi_attitude_line,group_ykk_kpi_user,1,0,0,0
+access_ykk_kpi_department_kpi_attitude_line_user,ykk.kpi.department.kpi.attitude.line user,model_ykk_kpi_department_kpi_attitude_line,group_ykk_kpi_user,1,1,0,0
 access_ykk_kpi_department_kpi_attitude_line_admin,ykk.kpi.department.kpi.attitude.line administrator,model_ykk_kpi_department_kpi_attitude_line,group_ykk_kpi_admin,1,1,1,1
 
 access_ykk_kpi_annual_kpi_user,ykk.kpi.annual.kpi user,model_ykk_kpi_annual_kpi,group_ykk_kpi_user,1,1,0,0

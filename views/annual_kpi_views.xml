@@ -80,7 +80,7 @@
                     <notebook>
                         <page string="Performance Evaluation">
                             <field name="performance_line_ids" readonly="state == 'done'">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="goal_id" options="{'no_create': True, 'no_open': True}" domain="[('type', '=', 'performance')]"/>
                                     <button name="action_view_goal" type="object" icon="fa-search"
                                         title="View Goal" invisible="not goal_id"/>
@@ -92,7 +92,7 @@
                         </page>
                         <page string="Role-based Behavior Evaluation">
                             <field name="role_line_ids" readonly="group_kpi_user or state == 'done'">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
                                     <field name="criteria_details"/>
@@ -102,7 +102,7 @@
                         </page>
                         <page string="Behavior Evaluation">
                             <field name="behavior_line_ids" readonly="group_kpi_user or state == 'done'">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
                                     <field name="criteria_details"/>
@@ -112,7 +112,7 @@
                         </page>
                         <page string="Attitude Evaluation">
                             <field name="attitude_line_ids" readonly="group_kpi_user or state == 'done'">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="name"/>
                                     <field name="achievement_criteria"/>
                                     <field name="criteria_details"/>

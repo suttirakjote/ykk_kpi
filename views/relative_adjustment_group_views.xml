@@ -19,7 +19,7 @@
         <field name="name">ykk.kpi.relative.adjustment.group.list</field>
         <field name="model">ykk.kpi.relative.adjustment.group</field>
         <field name="arch" type="xml">
-            <list string="Relative Adjustment Group" sample="1" editable="bottom" default_order="sequence">
+            <list string="Relative Adjustment Group" sample="1" editable="top" default_order="sequence">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="grade_ids" widget="many2many_tags"/>

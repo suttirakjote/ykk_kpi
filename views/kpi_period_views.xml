@@ -28,7 +28,7 @@
         <field name="name">ykk.kpi.period.list</field>
         <field name="model">ykk.kpi.period</field>
         <field name="arch" type="xml">
-            <list string="Periods" sample="1" editable="bottom" multi_edit="1">
+            <list string="Periods" sample="1" editable="top" multi_edit="1">
                 <field name="name"/>
                 <field name="is_end_period"/>
                 <field name="start_date" required="True"/>

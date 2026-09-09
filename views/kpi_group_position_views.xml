@@ -18,7 +18,7 @@
         <field name="name">ykk.kpi.group.position.list</field>
         <field name="model">ykk.kpi.group.position</field>
         <field name="arch" type="xml">
-            <list string="Group Positions" sample="1" editable="bottom" multi_edit="1">
+            <list string="Group Positions" sample="1" editable="top" multi_edit="1">
                 <field name="name"/>
                 <field name="active"/>
             </list>

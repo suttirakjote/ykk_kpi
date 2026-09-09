@@ -76,7 +76,7 @@
                                    domain="[('type', '=', 'performance'), ('department_id', '=', department_id), ('active', '=', True)]"
                                    readonly="state != 'draft'"/>
                             <field name="performance_line_ids" readonly="state != 'draft'">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="goal_id" options="{'no_create': True}" domain="[('type', '=', 'performance'), ('department_id', '=', parent.department_id), ('active', '=', True)]"/>
                                     <field name="achievement_criteria"/>
                                     <field name="criteria_details"/>

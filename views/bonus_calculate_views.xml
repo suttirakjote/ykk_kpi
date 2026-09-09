@@ -35,7 +35,7 @@
                     <notebook>
                         <page string="Bonus Details">
                             <field name="line_ids">
-                                <list editable="bottom">
+                                <list editable="top">
                                     <field name="employee_id"/>
                                     <field name="level_id" optional="show"/>
                                     <field name="department_id" optional="show"/>
