@@ -42,6 +42,13 @@ class BonusCalculate(models.Model):
         "calculate_id",
         string="Lines",
     )
+    cola = fields.Float(string="COLA")
+
+    @api.onchange("cola")
+    def _onchange_cola(self):
+        for record in self:
+            for line in record.line_ids:
+                line.cola = record.cola
 
     @api.model_create_multi
     def create(self, vals_list):

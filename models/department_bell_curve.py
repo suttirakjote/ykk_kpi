@@ -83,7 +83,8 @@ class KpiDepartmentBellCurve(models.Model):
                 "level_id": kpi.level_id.id,
                 "overall_grade_id": kpi.overall_grade_id.id,
                 "document_ref": kpi.name,
-                "score": kpi.total_score,
+                "score": kpi.overall_score,
+                # "score": kpi.total_score,
             }))
         self.line_ids = commands
         self._apply_forced_distribution()

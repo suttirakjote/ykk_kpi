@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_ykk_kpi_import_attitude_form" model="ir.ui.view">
+        <field name="name">ykk.kpi.import.attitude.form</field>
+        <field name="model">ykk.kpi.import.attitude</field>
+        <field name="arch" type="xml">
+            <form string="Import Attitude">
+                <header>
+                    <button name="action_inprocess" string="In Process" type="object"
+                        class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_confirm" string="Confirm" type="object"
+                        class="btn-primary" invisible="state != 'inprocess'"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,inprocess,confirm"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="upload_file" filename="upload_filename"
+                                widget="binary" readonly="state != 'draft'"/>
+                            <field name="upload_filename" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="company_id" groups="base.group_multi_company"
+                                readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Data">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="year"/>
+                                    <field name="employee_code"/>
+                                    <field name="employee_id"/>
+                                    <field name="tardiness"/>
+                                    <field name="unexplained_absence"/>
+                                    <field name="verbal_reprimand"/>
+                                    <field name="warning_letter"/>
+                                    <field name="suspension"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ykk_kpi_import_attitude_list" model="ir.ui.view">
+        <field name="name">ykk.kpi.import.attitude.list</field>
+        <field name="model">ykk.kpi.import.attitude</field>
+        <field name="arch" type="xml">
+            <list string="Import Attitude">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="upload_filename"/>
+                <field name="user_id"/>
+                <field name="state" widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state == 'inprocess'"
+                    decoration-success="state == 'confirm'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_import_attitude" model="ir.actions.act_window">
+        <field name="name">Import Attitude</field>
+        <field name="res_model">ykk.kpi.import.attitude</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_ykk_kpi_import_attitude"
+        name="Import Attitude"
+        parent="menu_ykk_kpi_import"
+        action="action_import_attitude"
+        sequence="50"/>
+
+</odoo>

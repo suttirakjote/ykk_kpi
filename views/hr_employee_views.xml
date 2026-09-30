@@ -10,28 +10,29 @@
             <xpath expr="(//field[@name='work_email'])[1]" position="before">
                 <field name="ykk_employee_code"/>
             </xpath>
+
             <xpath expr="//notebook" position="inside">
-                <page string="Thai Name" name="ykk_thai_name">
-                    <group>
-                        <group string="ชื่อภาษาไทย (ใช้ในเอกสารแจ้งการปรับค่าจ้าง)">
+                <page string="KPI Details" name="ykk_kpi_details">
+                    <group string="ชื่อภาษาไทย (ใช้ในเอกสารแจ้งการปรับค่าจ้าง)">
+                        <group>
                             <field name="ykk_thai_prefix" placeholder="เช่น นาย / นาง / นางสาว"/>
                             <field name="ykk_thai_first_name"/>
                             <field name="ykk_thai_last_name"/>
                             <field name="ykk_thai_full_name"/>
                         </group>
                     </group>
-                </page>
-            </xpath>
-            <xpath expr="//notebook" position="inside">
-                <page string="KPI Details" name="ykk_kpi_details">
-                    <group>
-                        <group string="KPI Information">
+                    <group string="Details">
+                        <group>
                             <field name="ykk_salary_month"/>
                             <field name="ykk_kpi_level_id" options="{'no_create': True}"/>
-                            <field name="ykk_kpi_group_position_id" options="{'no_create': True}"/>
+                            <!-- <field name="ykk_kpi_group_position_id" options="{'no_create': True}"/> -->
                             <field name="ykk_kpi_employee_type"/>
                             <field name="ykk_start_work_date"/>
                             <field name="ykk_tenure"/>
+                        </group>
+                        <group>
+                            <field name="first_evaluator_id" widget="many2one_avatar_user"/>
+                            <field name="second_evaluator_id" widget="many2one_avatar_user"/>
                         </group>
                     </group>
                     <group string="KPI History">
@@ -46,6 +47,17 @@
                         </field>
                     </group>
                 </page>
+            </xpath>
+
+
+            <xpath expr="//field[@name='job_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook/page[@name='public']/div[@id='o_work_employee_container']/div[@id='o_work_employee_main']/group[4]/field[@name='resource_calendar_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook/page[@name='hr_settings']/group/group[@name='active_group']/field[@name='employee_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
             </xpath>
 
         </field>

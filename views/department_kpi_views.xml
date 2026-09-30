@@ -84,6 +84,7 @@
                     <group>
                         <group>
                             <field name="group_kpi_user" invisible="1"/>
+                            <field name="current_employee" invisible="1"/>
                             <field name="can_edit_employee" invisible="1"/>
                             <field name="can_edit_first_evaluator" invisible="1"/>
                             <field name="can_edit_second_evaluator" invisible="1"/>
@@ -98,11 +99,29 @@
                             <field name="date" readonly="group_kpi_user"/>
                             <!-- <field name="responsible_id" widget="many2one_avatar_user" options="{'no_create': True}"/> -->
                             <field name="annual_id" options="{'no_create': True}" readonly="group_kpi_user"/>
-                            <field name="total_score"/>
+                            <!-- <field name="total_score"/> -->
                         </group>
                     </group>
                     <notebook>
-                        <page string="Performance Evaluation">
+                        <page string="Interview Performance">
+                            <field name="interview_line_ids">
+                                <list editable="top">
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
+                                    <field name="achievement_criteria" optional="show"/>
+                                    <field name="weight" optional="show"/>
+                                    <field name="comment_employee" optional="show"/>
+                                    <field name="performance_result" optional="show"/>
+                                    <field name="first_evaluator_comment" optional="show"/>
+                                    <field name="first_evaluator_score" optional="show"/>
+                                    <field name="comment_second_evaluator" optional="show"/>
+                                    <field name="second_evaluator_score" optional="show"/>
+                                    <field name="total_score" string="Score"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- <page string="Performance Evaluation">
                             <field name="performance_line_ids">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
@@ -112,20 +131,189 @@
                                     <field name="evaluation_state" column_invisible="True"/>
                                     <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
                                     <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria" readonly="group_kpi_user"/>
-                                    <field name="weight" sum="Total Weight" readonly="group_kpi_user"/>
-                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'"/>
-                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'"/>
-                                    <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'"/>
-                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'"/>
-                                    <field name="total_score" readonly="group_kpi_user"/>
+                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="weight" readonly="group_kpi_user" optional="show"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="total_score" string="Score" readonly="group_kpi_user"/>
+                                </list>
+                            </field>
+                        </page> -->
+
+                        <!-- Current Employee -->
+                        <page string="Performance Evaluation" invisible="not current_employee">
+                            <field name="performance_line_ids">
+                                <list editable="top">
+                                    <field name="group_kpi_user" column_invisible="True"/>
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
+                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="weight" readonly="group_kpi_user" optional="show"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                 </list>
                             </field>
                         </page>
+                        <page string="Role-based Behavior Evaluation" invisible="not current_employee or evaluation_topic == 'behavior'">
+                            <field name="role_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Behavior Evaluation" invisible="not current_employee or evaluation_topic == 'role_based_behavior'">
+                            <field name="behavior_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- First Evaluator -->
+                        <page string="Performance Evaluation" invisible="not can_edit_first_evaluator">
+                            <field name="performance_line_ids">
+                                <list editable="top">
+                                    <field name="group_kpi_user" column_invisible="True"/>
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
+                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="weight" readonly="group_kpi_user" optional="show"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Role-based Behavior Evaluation" invisible="not can_edit_first_evaluator or evaluation_topic == 'behavior'">
+                            <field name="role_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Behavior Evaluation" invisible="not can_edit_first_evaluator or evaluation_topic == 'role_based_behavior'">
+                            <field name="behavior_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- Second Evaluator -->
+                        <page string="Performance Evaluation" invisible="not can_edit_second_evaluator">
+                            <field name="performance_line_ids">
+                                <list editable="top">
+                                    <field name="group_kpi_user" column_invisible="True"/>
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
+                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="weight" readonly="group_kpi_user" optional="show"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="total_score" string="Score" readonly="group_kpi_user"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Role-based Behavior Evaluation" invisible="not can_edit_second_evaluator or evaluation_topic == 'behavior'">
+                            <field name="role_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="total_score" string="Total"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="role_tab_total" string="Average"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
+                        </page>
+                        <page string="Behavior Evaluation" invisible="not can_edit_second_evaluator or evaluation_topic == 'role_based_behavior'">
+                            <field name="behavior_line_ids">
+                                <list editable="top">
+                                    <field name="can_edit_employee" column_invisible="True"/>
+                                    <field name="can_edit_first_evaluator" column_invisible="True"/>
+                                    <field name="can_edit_second_evaluator" column_invisible="True"/>
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="total_score" string="Total"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="behavior_tab_total" string="Average"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
+                        </page>
 
-                        <page string="Role-based Behavior Evaluation">
+                        <!-- Backup -->
+                        <!-- <page string="Role-based Behavior Evaluation" invisible="evaluation_topic == 'behavior'">
                             <field name="role_line_ids">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
@@ -146,7 +334,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Behavior Evaluation">
+                        <page string="Behavior Evaluation" invisible="evaluation_topic == 'role_based_behavior'">
                             <field name="behavior_line_ids">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
@@ -166,7 +354,7 @@
                                     <field name="total_score"/>
                                 </list>
                             </field>
-                        </page>
+                        </page> -->
                         <page string="Attitude Evaluation">
                             <field name="attitude_line_ids">
                                 <list editable="top">
@@ -176,42 +364,50 @@
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
                                     <field name="name"/>
-                                    <field name="achievement_criteria"/>
-                                    <field name="weight" sum="Total Weight"/>
-                                    <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'"/>
+                                    <field name="deduction_score" readonly="evaluation_state != 'draft'"/>
+                                    <field name="frequency" readonly="evaluation_state != 'draft'"/>
+                                    <field name="total_score" string="Score"/>
+
+                                    <!-- <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'"/>
                                     <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'"/>
                                     <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'"/>
                                     <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'"/>
-                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'"/>
-                                    <field name="total_score"/>
+                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'"/> -->
                                 </list>
                             </field>
-                        </page>
-                        <page string="Summary">
-                            <group col="2">
-                                <group string="Parent KPI">
-                                    <field name="summary_parent_kpi_ids">
-                                        <list editable="top">
-                                            <field name="parent_kpi_id" domain="[('employee_id', '=', parent.employee_id), ('state', '=', 'evaluated'), ('id', '!=', parent.id)]" options="{'no_create': True}"/>
-                                            <field name="grade_id" readonly="1"/>
-                                        </list>
-                                    </field>
-                                </group>
-                                <group string="Grades">
-                                    <field name="period_grade_id" readonly="1"/>
-                                    <field name="overall_grade_id" readonly="1"/>
-                                    <field name="period_score" readonly="1" invisible="1"/>
-                                    <field name="overall_score" readonly="1" invisible="1"/>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="attitude_tab_total" string="Total Deduction Score"/>
+                                    <field name="attitude_tab_remaining"/>
+                                    <field name="attitude_tab_evaluation"/>
                                 </group>
                             </group>
-                            <group string="Indicator Weight">
-                                <group>
+                            <div class="clearfix"/>
+                        </page>
+                        <page string="Summary" invisible="current_employee">
+                            <group>
+                                <group string="Indicator Weight">
                                     <field name="performance_weight" readonly="1"/>
                                     <field name="role_based_behavior_weight" readonly="1"/>
                                     <field name="behavior_weight" readonly="1"/>
                                     <field name="attitude_weight" readonly="1"/>
                                 </group>
+                                <group string="Grades">
+                                    <field name="period_grade_id" readonly="1"/>
+                                    <field name="period_score" readonly="1"/>
+                                    <field name="overall_grade_id" readonly="1"/>
+                                    <field name="overall_score" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Parent KPI">
+                                    <field name="summary_parent_kpi_ids" nolabel="1">
+                                        <list editable="top">
+                                            <field name="parent_kpi_id" domain="[('employee_id', '=', parent.employee_id), ('state', '=', 'evaluated'), ('id', '!=', parent.id)]" options="{'no_create': True}"/>
+                                            <field name="grade_id" readonly="1"/>
+                                        </list>
+                                    </field>
                             </group>
                         </page>
                         <page name="description_page" string="Description">

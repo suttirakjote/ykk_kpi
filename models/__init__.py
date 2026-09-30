@@ -22,5 +22,6 @@ from . import kpi_grade_history
 from . import kpi_adjustment
 from . import adjustment_integration
 from . import import_tiger_soft
+from . import import_attitude
 from . import template_document
 from . import department_bell_curve

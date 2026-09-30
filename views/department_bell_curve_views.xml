@@ -100,5 +100,6 @@
         name="Grade Distribution"
         parent="menu_ykk_kpi_evaluate"
         action="action_department_bell_curve"
+        groups="ykk_kpi.group_ykk_kpi_admin"
         sequence="25"/>
 </odoo>

@@ -1,7 +1,7 @@
 {
     "name": "YKK - KPI Management",
     "summary": "KPI evaluation and allocation management for YKK",
-    "version": "18.0.1.0.1",
+    "version": "18.0.1.0.6",
     "category": "Human Resources",
     'author': 'Craft and Code Company Limited',
     'company': 'Craft and Code Company Limited',
@@ -9,11 +9,13 @@
     'license': 'OPL-1',
     "depends": [
         "base",
+        "web",
         "hr",
         "mail",
     ],
     "data": [
         "security/security_groups.xml",
+        "security/record_rules.xml",
         "security/ir.model.access.csv",
         "data/decimal_precision_data.xml",
         "data/ir_sequence_data.xml",
@@ -47,8 +49,12 @@
         "views/adjustment_integration_views.xml",
         "views/adjustment_menus.xml",
         "views/import_tiger_soft_views.xml",
+        "views/import_attitude_views.xml",
         "views/template_document_views.xml",
         "report/template_document_report.xml",
+
+        "views/webclient_templates.xml",
+        "views/res_user_views.xml"
     ],
     "assets": {
         "web.assets_backend": [

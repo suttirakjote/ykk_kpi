@@ -19,14 +19,19 @@
         <field name="name">ykk.kpi.level.list</field>
         <field name="model">ykk.kpi.level</field>
         <field name="arch" type="xml">
-            <list string="Job Levels" sample="1" editable="top" multi_edit="1">
-                <field name="code" optional="show"/>
+            <list string="Job Levels" sample="1">
+                <field name="code"/>
                 <field name="name"/>
                 <field name="merit" optional="show"/>
                 <field name="att" optional="show"/>
                 <field name="min_salary" optional="show"/>
                 <field name="max_salary" optional="show"/>
-                <field name="group_position_id" options="{'no_create': True}" optional="show"/>
+                <field name="group_position_id" optional="show"/>
+                <field name="evaluation_topic" optional="show"/>
+                <field name="performance_weight" optional="show"/>
+                <field name="role_based_behavior_weight" optional="show"/>
+                <field name="behavior_weight" optional="show"/>
+                <field name="attitude_weight" optional="show"/>
                 <field name="indicator_weight" optional="show"/>
                 <field name="description" optional="show"/>
                 <field name="active"/>
@@ -34,10 +39,54 @@
         </field>
     </record>
 
+    <record id="view_ykk_kpi_level_form" model="ir.ui.view">
+        <field name="name">ykk.kpi.level.form</field>
+        <field name="model">ykk.kpi.level</field>
+        <field name="arch" type="xml">
+            <form string="Job Level">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="group_position_id" options="{'no_create': True}"/>
+                            <field name="evaluation_topic" required="1"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Details">
+                        <group>
+                            <field name="merit"/>
+                            <field name="att"/>
+                            <field name="min_salary"/>
+                            <field name="max_salary"/>
+                        </group>
+                        <group>
+                            <field name="performance_weight"/>
+                            <field name="role_based_behavior_weight"/>
+                            <field name="behavior_weight"/>
+                            <field name="attitude_weight"/>
+                            <field name="indicator_weight"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" nolabel="1" placeholder="Add a description..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="action_kpi_level" model="ir.actions.act_window">
         <field name="name">Job Levels</field>
         <field name="res_model">ykk.kpi.level</field>
-        <field name="view_mode">list</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first Level.

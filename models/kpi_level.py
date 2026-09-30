@@ -12,11 +12,20 @@ class KpiLevel(models.Model):
     active = fields.Boolean(string="Active", default=True)
 
     group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Job")
+    evaluation_topic = fields.Selection([
+        ("all", "All"),
+        ("role_based_behavior", "Role-based Behavior Evaluation"),
+        ("behavior", "Behavior Evaluation")], string="Evaluation Topic", default="all")
     indicator_weight = fields.Integer(string="Indicator Weight (%)")
     merit = fields.Float(string="Merit")
     att = fields.Float(string="Att.")
     min_salary = fields.Float(string="Min Salary")
     max_salary = fields.Float(string="Max Salary")
+
+    performance_weight = fields.Integer(string="Performance Evaluation")
+    role_based_behavior_weight = fields.Integer(string="Role-based Behavior Evaluation")
+    behavior_weight = fields.Integer(string="Behavior Evaluation")
+    attitude_weight = fields.Integer(string="Attitude Evaluation")
 
     _sql_constraints = [
         ("name_company_unique", "unique(name, company_id)", "The name must be unique per company."),

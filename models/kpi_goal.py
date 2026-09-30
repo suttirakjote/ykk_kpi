@@ -12,16 +12,12 @@ class KpiGoal(models.Model):
     criteria_details = fields.Text(string="Criteria Details")
     group_type = fields.Selection([
             ("individual", "Individual"),
-            ("section", "Section")], string="Group Type")
+            ("department", "Department")], string="Group Type")
     type = fields.Selection([("performance", "Performance Evaluation")], string="Type", default="performance",required=True)
     department_id = fields.Many2one("hr.department", string="Department")
     description = fields.Text(string="Description")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     active = fields.Boolean(string="Active", default=True)
-
-    _sql_constraints = [
-        ("code_company_unique", "unique(code, company_id)", "The code must be unique per company."),
-    ]
 
     @api.depends("code", "name")
     def _compute_display_name(self):

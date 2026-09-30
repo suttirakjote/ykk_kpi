@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <template id="web_login_inherit_ykk_kpi"  inherit_id="web.login">
+
+            <xpath expr="//label[@for='login']" position="replace">
+                <label for="login">User</label>
+            </xpath>
+            <xpath expr="//input[@name='login']" position="attributes">
+                <attribute name="placeholder">User</attribute>
+            </xpath>
+
+        </template>
+
+    </data>
+</odoo>

@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <search string="KPI/Goal Setting">
                 <field name="employee_id"/>
+                <field name="employee_code"/>
                 <field name="group_position_id"/>
                 <field name="level_id"/>
                 <field name="department_id"/>
@@ -30,18 +31,33 @@
         <field name="model">ykk.kpi.annual.kpi</field>
         <field name="arch" type="xml">
             <list string="KPI/Goal Setting" sample="1">
+                <header>
+                    <button name="action_approve"
+                        string="Select Approve"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_approve"/>
+                    <button name="action_create_evaluation"
+                        string="Create Evaluation"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_create_evaluation"/>
+                </header>
                 <field name="name"/>
                 <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="employee_code" optional="show"/>
                 <field name="group_position_id" optional="show"/>
                 <field name="level_id" optional="show"/>
                 <field name="department_id" optional="show"/>
                 <field name="period_id" optional="show"/>
+                <field name="evaluation_id" optional="show"/>
                 <field name="responsible_id" widget="many2one_avatar_user"/>
                 <field name="activity_ids" widget="list_activity"/>
                 <field name="state" widget="badge" 
-                    decoration-info="state == 'draft'"
-                    decoration-warning="state == 'inprocess'"
-                    decoration-success="state == 'done'"/>
+                    decoration-info="state in ['draft', 'revise']"
+                    decoration-warning="state in ['1_approve', '2_approve', 'waiting_approve']"
+                    decoration-success="state == 'done'"
+                    decoration-danger="state == 'reject'"/>
             </list>
         </field>
     </record>
@@ -52,28 +68,51 @@
         <field name="arch" type="xml">
             <form string="KPI/Goal Setting">
                 <header>
-                    <button name="action_inprocess" string="Inprocess" type="object" class="btn-primary" invisible="group_kpi_user or state != 'draft'"/>
-                    <button name="action_done" string="Done" type="object" class="btn-primary" invisible="group_kpi_user or state != 'inprocess'"/>
+
+                    <button name="action_1_approve" string="1st Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_2_approve" string="2nd Approve" type="object" class="btn-primary" invisible="state != '1_approve'"/>
+                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary" invisible="state != '2_approve'"/>
+
+                    <!-- <button name="action_approve"
+                        string="Approve"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_approve"
+                        invisible="state not in ['waiting_approve', 'revise']"/> -->
+                    <button name="action_reject"
+                        string="Reject"
+                        type="object"
+                        groups="ykk_kpi.group_ykk_kpi_approve"
+                        invisible="state != 'waiting_approve'"/>
+                    <button name="action_revise"
+                        string="Revise"
+                        type="object"
+                        class="btn-primary"
+                        groups="ykk_kpi.group_ykk_kpi_approve"
+                        invisible="state != 'reject'"/>
                     <button name="action_cancel" string="Cancel" type="object" invisible="group_kpi_user or state == 'cancel'"/>
                     <button name="action_draft" string="Reset to Draft" type="object" invisible="group_kpi_user or state != 'cancel'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,done"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,1_approve,2_approve,waiting_approve,done"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1><field name="name"/></h1>
+                        <h1><field name="name" readonly="1"/></h1>
                     </div>
                     <group>
                         <group>
                             <field name="group_kpi_user" invisible="1"/>
+                            <field name="evaluation_topic" invisible="1"/>
                             <field name="employee_id" widget="many2one_avatar_employee" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'"/>
+                            <field name="employee_code" readonly="1"/>
                             <field name="group_position_id" options="{'no_create': True}" readonly="1"/>
                             <field name="level_id" options="{'no_create': True}" readonly="1"/>
                             <field name="department_id" options="{'no_create': True}" readonly="1"/>
                         </group>
                         <group>
-                            <field name="template_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'" domain="[('department_id', '=', department_id), ('active', '=', True)]"/>
                             <field name="period_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'"/>
-                            <field name="date" readonly="group_kpi_user or state == 'done'"/>
+                            <field name="template_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'" domain="[('department_id', '=', department_id), ('active', '=', True)]"/>
+                            <field name="evaluation_id" options="{'no_create': True}" readonly="1"/>
+                            <field name="date" readonly="1"/>
                             <field name="responsible_id" invisible="1"/>
                         </group>
                     </group>
@@ -90,23 +129,23 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Role-based Behavior Evaluation">
+                        <page string="Role-based Behavior Evaluation" invisible="group_kpi_user or evaluation_topic == 'behavior'">
                             <field name="role_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="top">
                                     <field name="name"/>
-                                    <field name="achievement_criteria"/>
+                                    <!-- <field name="achievement_criteria"/> -->
                                     <field name="criteria_details"/>
-                                    <field name="weight" sum="Total Weight"/>
+                                    <!-- <field name="weight" sum="Total Weight"/> -->
                                 </list>
                             </field>
                         </page>
-                        <page string="Behavior Evaluation">
+                        <page string="Behavior Evaluation" invisible="group_kpi_user or evaluation_topic == 'role_based_behavior'">
                             <field name="behavior_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="top">
                                     <field name="name"/>
-                                    <field name="achievement_criteria"/>
+                                    <!-- <field name="achievement_criteria"/> -->
                                     <field name="criteria_details"/>
-                                    <field name="weight" sum="Total Weight"/>
+                                    <!-- <field name="weight" sum="Total Weight"/> -->
                                 </list>
                             </field>
                         </page>
@@ -114,16 +153,16 @@
                             <field name="attitude_line_ids" readonly="group_kpi_user or state == 'done'">
                                 <list editable="top">
                                     <field name="name"/>
-                                    <field name="achievement_criteria"/>
+                                    <!-- <field name="achievement_criteria"/> -->
                                     <field name="criteria_details"/>
-                                    <field name="weight" sum="Total Weight"/>
+                                    <!-- <field name="weight" sum="Total Weight"/> -->
                                 </list>
                             </field>
                         </page>
-                        <page string="Other Info">
+                        <page string="Other Info" invisible="group_kpi_user">
                             <group string="Indicator Weight">
                                 <group>
-                                    <field name="indicator_weight" readonly="1"/>
+                                    <!-- <field name="indicator_weight" readonly="1"/> -->
                                     <field name="performance_weight" readonly="group_kpi_user or state == 'done'"/>
                                     <field name="role_based_behavior_weight" readonly="group_kpi_user or state == 'done'"/>
                                     <field name="behavior_weight" readonly="group_kpi_user or state == 'done'"/>

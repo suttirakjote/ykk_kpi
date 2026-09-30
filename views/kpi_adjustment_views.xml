@@ -70,17 +70,15 @@
                          red row when grade changed -->
                     <notebook>
                         <page string="Grade Lines">
-                            <field name="line_ids"
-                                   readonly="state != 'draft'">
-                                <list editable="top"
-                                      decoration-danger="is_changed == True">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <list editable="top" decoration-danger="is_changed == True">
                                     <field name="department_id"/>
                                     <field name="employee_id"/>
                                     <field name="department_kpi_id" readonly="1"/>
                                     <field name="current_grade"/>
+                                    <field name="score"/>
                                     <field name="new_grade"/>
-                                    <field name="is_changed"
-                                           widget="boolean" column_invisible="1"/>
+                                    <field name="is_changed" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>
@@ -126,7 +124,7 @@
     </record>
 
     <record id="action_kpi_adjustment" model="ir.actions.act_window">
-        <field name="name">KPI Grade Adjustments</field>
+        <field name="name">Adjustments</field>
         <field name="res_model">kpi.adjustment</field>
         <field name="view_mode">list,form</field>
     </record>

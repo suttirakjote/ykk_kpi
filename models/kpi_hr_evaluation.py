@@ -13,14 +13,21 @@ class KpiHrEvaluation(models.Model):
     criteria_details = fields.Text(string="Criteria Details")
     group_type = fields.Selection([
         ("individual", "Individual"),
-        ("section", "Section"),
+        ("department", "Department"),
     ], string="Group Type")
     type = fields.Selection([
         ("role_based_behavior", "Role-based Behavior Evaluation"),
         ("behavior", "Behavior Evaluation"),
         ("attitude", "Attitude Evaluation"),
     ], string="Type", required=True)
-    department_id = fields.Many2one("hr.department", string="Department")
+    attitude_type = fields.Selection([
+        ("tardiness", "Tardiness"),
+        ("unexplained_absence", "Unexplained Absence"),
+        ("verbal_reprimand", "Verbal Reprimand"),
+        ("warning_letter", "Warning Letter"),
+        ("suspension", "Suspension"),
+    ], string="Attitude Type")
+    deduction_score = fields.Integer(string="Deduction Score")
     level_ids = fields.Many2many("ykk.kpi.level", string="Job Levels")
     description = fields.Text(string="Description")
     company_id = fields.Many2one(

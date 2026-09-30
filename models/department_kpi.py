@@ -28,16 +28,44 @@ class KpiDepartmentKpi(models.Model):
     period_id = fields.Many2one("ykk.kpi.period", string="Period", required=True, tracking=True)
     responsible_id = fields.Many2one("res.users", string="Responsible", default=lambda self: self.env.user)
     date = fields.Date(string='Date', default=fields.Date.context_today)
-    annual_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting")
+    annual_id = fields.Many2one(
+        "ykk.kpi.annual.kpi",
+        string="KPI/Goal Setting",
+        copy=False,
+        index=True,
+        ondelete="restrict",
+    )
+    interview_line_ids = fields.One2many("ykk.kpi.department.kpi.interview.line", "department_kpi_id", string="Interview Performance")
+
     performance_line_ids = fields.One2many("ykk.kpi.department.kpi.performance.line", "department_kpi_id", string="Performance Evaluation")
     role_line_ids = fields.One2many("ykk.kpi.department.kpi.role.line", "department_kpi_id", string="Role-based Behavior Evaluation")
     behavior_line_ids = fields.One2many("ykk.kpi.department.kpi.behavior.line", "department_kpi_id", string="Behavior Evaluation")
     attitude_line_ids = fields.One2many("ykk.kpi.department.kpi.attitude.line", "department_kpi_id", string="Attitude Evaluation")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
-    performance_tab_total = fields.Float(string="Performance Total", digits="KPI Score", compute="_compute_tab_totals")
-    role_tab_total = fields.Float(string="Role-based Behavior Total", digits="KPI Score", compute="_compute_tab_totals")
-    behavior_tab_total = fields.Float(string="Behavior Total", digits="KPI Score", compute="_compute_tab_totals")
-    attitude_tab_total = fields.Float(string="Attitude Total", digits="KPI Score", compute="_compute_tab_totals")
+    performance_tab_total = fields.Float(
+        string="Performance Total",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
+    role_tab_total = fields.Float(
+        string="Role-based Behavior Total",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
+    behavior_tab_total = fields.Float(
+        string="Behavior Total",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
+    attitude_tab_total = fields.Float(
+        string="Attitude Total",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
     period_score = fields.Integer(string="Period Score", compute="_compute_period_grade")
     period_grade_id = fields.Many2one("ykk.kpi.grade", string="Period Grade", compute="_compute_period_grade")
     summary_parent_kpi_ids = fields.One2many(
@@ -52,6 +80,7 @@ class KpiDepartmentKpi(models.Model):
     can_edit_employee = fields.Boolean(compute="_compute_evaluation_permissions")
     can_edit_first_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
     can_edit_second_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
+    current_employee = fields.Boolean(compute="_compute_current_employee")
 
     # Indicator Weight (read-only) ดึงจาก KPI/Goal Setting ที่อ้างอิง - แสดงใน tab Summary
     performance_weight = fields.Integer(related="annual_id.performance_weight", string="Performance Evaluation", readonly=True)
@@ -60,6 +89,20 @@ class KpiDepartmentKpi(models.Model):
     attitude_weight = fields.Integer(related="annual_id.attitude_weight", string="Attitude Evaluation", readonly=True)
 
     description = fields.Html(string='Description', sanitize_attributes=False)
+    evaluation_topic = fields.Selection(related="level_id.evaluation_topic", string="Evaluation Topic")
+
+    attitude_tab_remaining = fields.Float(
+        string="Remaining Score",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
+    attitude_tab_evaluation = fields.Float(
+        string="Evaluation Score",
+        digits="KPI Score",
+        compute="_compute_tab_totals",
+        store=True,
+    )
 
     @api.depends_context("uid")
     def _compute_group_kpi_user(self):
@@ -71,15 +114,28 @@ class KpiDepartmentKpi(models.Model):
         for record in self:
             record.group_kpi_user = readonly_user
 
-    @api.depends("employee_id.user_id", "company_id")
+    @api.depends("employee_id.user_id", "department_id", "company_id")
     @api.depends_context("uid")
     def _compute_evaluation_permissions(self):
         current_user = self.env.user
         for record in self:
             rule = record._get_evaluation_rule()
-            record.can_edit_employee = bool(rule and rule.user_id == current_user)
+            is_current_employee = record.employee_id.user_id == current_user
+            is_employee_rule = (rule and rule.rule_type == "employee" and rule.user_id == current_user)
+            is_department_rule = (rule and rule.rule_type == "department" and rule.department_id == record.employee_id.department_id)
+            record.can_edit_employee = bool(rule and is_current_employee and (is_employee_rule or is_department_rule))
+            # Evaluator
             record.can_edit_first_evaluator = bool(rule and rule.first_evaluator_id == current_user)
             record.can_edit_second_evaluator = bool(rule and rule.second_evaluator_id == current_user)
+
+    @api.depends("employee_id.user_id")
+    @api.depends_context("uid")
+    def _compute_current_employee(self):
+        current_user = self.env.user
+        for record in self:
+            record.current_employee = (
+                record.employee_id.user_id == current_user
+            )
 
     @api.model
     def _validate_unique_employee_period(self, employee_id, period_id):
@@ -116,14 +172,21 @@ class KpiDepartmentKpi(models.Model):
         "performance_line_ids.total_score",
         "role_line_ids.total_score",
         "behavior_line_ids.total_score",
-        "attitude_line_ids.total_score",
-    )
+        "attitude_line_ids.total_score")
     def _compute_tab_totals(self):
         for record in self:
             record.performance_tab_total = sum(record.performance_line_ids.mapped("total_score"))
-            record.role_tab_total = sum(record.role_line_ids.mapped("total_score"))
-            record.behavior_tab_total = sum(record.behavior_line_ids.mapped("total_score"))
-            record.attitude_tab_total = sum(record.attitude_line_ids.mapped("total_score"))
+            role_scores = record.role_line_ids.mapped("total_score")
+            behavior_scores = record.behavior_line_ids.mapped("total_score")
+            record.role_tab_total = (sum(role_scores) / len(role_scores) if role_scores else 0.0)
+            record.behavior_tab_total = (sum(behavior_scores) / len(behavior_scores) if behavior_scores else 0.0)
+            # Tab Attitude
+            attitude_tab_total = sum(record.attitude_line_ids.mapped("total_score"))
+            attitude_tab_remaining = 50 + attitude_tab_total
+            attitude_tab_evaluation = attitude_tab_remaining / 10
+            record.attitude_tab_total = attitude_tab_total
+            record.attitude_tab_remaining = attitude_tab_remaining
+            record.attitude_tab_evaluation = 0.0 if attitude_tab_evaluation < 0.0 else attitude_tab_evaluation
 
     @api.depends("employee_id")
     def _compute_employee_info(self):
@@ -132,27 +195,47 @@ class KpiDepartmentKpi(models.Model):
             record.level_id = record.employee_id.ykk_kpi_level_id
             record.department_id = record.employee_id.department_id
 
+    @api.onchange("employee_id")
+    def _onchange_employee_id(self):
+        for record in self:
+            annual = self.env["ykk.kpi.annual.kpi"]
+            attitude_line_commands = [(5, 0, 0)]
+            if record.employee_id:
+                annual = annual.search([
+                    ("employee_id", "=", record.employee_id.id),
+                    ("state", "=", "done")], order="id desc", limit=1)
+                evaluations = self.env["ykk.kpi.hr.evaluation"].search([
+                    ("type", "=", "attitude"),
+                    ("company_id", "=", record.company_id.id),
+                    ("active", "=", True),
+                ])
+                attitude_line_commands.extend([
+                    (0, 0, {
+                        "name": evaluation.name,
+                        "deduction_score": evaluation.deduction_score,
+                    })
+                    for evaluation in evaluations
+                ])
+            record.annual_id = annual
+            record.period_id = annual.period_id if annual else False
+            record.attitude_line_ids = attitude_line_commands
+
+    # 1st Evaluate
     def action_confirm(self):
         self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
-        if rule_id.first_evaluator_id != self.env.user:
-            raise UserError(
-                _("You do not have permission as the First Evaluator.")
-            )
+        if self.employee_id.user_id != self.env.user:
+            if rule_id.first_evaluator_id != self.env.user:
+                raise UserError(_("You do not have permission as the Employee or First Evaluator."))
         # Update State and Activity
-        self.activity_update()
         self.write({"state": "inprocess"})
         self.action_second_evaluate_activity()
 
+    # 2nd Evaluate
     def action_done(self):
         for record in self:
             errors = []
-            tabs = [
-                (_("Performance Evaluation"), record.performance_line_ids),
-                (_("Role-based Behavior Evaluation"), record.role_line_ids),
-                (_("Behavior Evaluation"), record.behavior_line_ids),
-                (_("Attitude Evaluation"), record.attitude_line_ids),
-            ]
+            tabs = [(_("Performance Evaluation"), record.performance_line_ids)]
             for tab_name, lines in tabs:
                 if lines and abs(sum(lines.mapped("weight")) - 100.0) > 0.01:
                     errors.append("%s = %s%%" % (tab_name, sum(lines.mapped("weight"))))
@@ -205,19 +288,23 @@ class KpiDepartmentKpi(models.Model):
 
     def _get_evaluation_rule(self):
         self.ensure_one()
+        rule_model = self.env["ykk.kpi.evaluation.rule"]
+        domain = [
+            ("company_id", "=", self.company_id.id),
+            ("active", "=", True),
+        ]
         employee_user = self.employee_id.user_id
-        if not employee_user:
-            return self.env["ykk.kpi.evaluation.rule"]
-
-        return self.env["ykk.kpi.evaluation.rule"].search(
-            [
-                ("user_id", "=", employee_user.id),
-                ("company_id", "=", self.company_id.id),
-                ("active", "=", True),
-            ],
-            order="id desc",
-            limit=1,
-        )
+        employee_department = self.employee_id.department_id
+        domain += [
+            "|",
+            "&",
+            ("rule_type", "=", "employee"),
+            ("user_id", "=", employee_user.id),
+            "&",
+            ("rule_type", "=", "department"),
+            ("department_id", "=", employee_department.id),
+        ]
+        return rule_model.search(domain, order="id desc", limit=1)
 
     def _check_evaluation_rule(self):
         rule_id = self._get_evaluation_rule()
@@ -225,7 +312,6 @@ class KpiDepartmentKpi(models.Model):
             raise ValidationError(_("Please configure the Evaluation Rule."))
 
     def action_first_evaluate_activity(self):
-        self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
         model_id = self.env['ir.model']._get(self._name).id
         self.activity_schedule('ykk_kpi.mail_activity_first_evaluator_to_validate',
@@ -237,7 +323,6 @@ class KpiDepartmentKpi(models.Model):
             date_deadline= fields.Date.today())
 
     def action_second_evaluate_activity(self):
-        self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
         model_id = self.env['ir.model']._get(self._name).id
         self.activity_schedule('ykk_kpi.mail_activity_second_evaluator_to_validate',
@@ -278,7 +363,7 @@ class KpiDepartmentKpi(models.Model):
         "performance_tab_total",
         "role_tab_total",
         "behavior_tab_total",
-        "attitude_tab_total",
+        "attitude_tab_evaluation",
         "performance_line_ids",
         "role_line_ids",
         "behavior_line_ids",
@@ -292,7 +377,7 @@ class KpiDepartmentKpi(models.Model):
                 ("performance_line_ids", "performance_tab_total"),
                 ("role_line_ids", "role_tab_total"),
                 ("behavior_line_ids", "behavior_tab_total"),
-                ("attitude_line_ids", "attitude_tab_total"),
+                ("attitude_line_ids", "attitude_tab_evaluation"),
             ]:
                 if record[line_field]:
                     tab_scores.append(record[total_field])
@@ -363,6 +448,55 @@ class KpiDepartmentKpiSummaryLine(models.Model):
         ),
     ]
 
+class KpiDepartmentKpiInterviewLine(models.Model):
+    _name = "ykk.kpi.department.kpi.interview.line"
+    _description = "KPI Evaluation Interview Line"
+
+    department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
+    evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
+    goal_id = fields.Many2one("ykk.kpi.goal", string="Goal")
+    achievement_criteria = fields.Text(string="Achievement Criteria")
+    weight = fields.Float(string="Weight")
+    comment_employee = fields.Text(string="Comment(Employee)")
+    performance_result = fields.Float(string="Performance Results (Employee)")
+    first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
+    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
+    comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
+    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
+
+    @api.depends("second_evaluator_score", "weight")
+    def _compute_total_score(self):
+        for record in self:
+            record.total_score = record.second_evaluator_score * (record.weight / 100.0)
+
+    def action_view_goal(self):
+        self.ensure_one()
+        if not self.goal_id:
+            return False
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Goal"),
+            "res_model": "ykk.kpi.goal",
+            "res_id": self.goal_id.id,
+            "view_mode": "form",
+            "views": [
+                (
+                    self.env.ref("ykk_kpi.view_ykk_kpi_goal_form").id,
+                    "form",
+                )
+            ],
+            "target": "new",
+            "context": {
+                **self.env.context,
+                "create": False,
+                "edit": False,
+                "delete": False,
+                "form_view_initial_mode": "readonly",
+            },
+        }
+
 class KpiDepartmentKpiPerformanceLine(models.Model):
     _name = "ykk.kpi.department.kpi.performance.line"
     _description = "KPI Evaluation Performance Line"
@@ -373,7 +507,7 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Text(string="Performance Results (Employee)")
+    performance_result = fields.Float(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
     first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
@@ -427,12 +561,19 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
         for record in self:
             record.total_score = record.second_evaluator_score * (record.weight / 100.0)
 
-    @api.constrains("first_evaluator_score", "second_evaluator_score")
+    @api.constrains(
+        "performance_result",
+        "first_evaluator_score",
+        "second_evaluator_score",
+    )
     def _check_score_range(self):
         for record in self:
-            for score in (record.first_evaluator_score, record.second_evaluator_score):
-                if score and not (1.0 <= score <= 5.0):
-                    raise ValidationError(_("Score (First/Second Evaluator) ต้องอยู่ระหว่าง 1 ถึง 5"))
+            if not 0.0 <= record.performance_result <= 5.0:
+                raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            if not 0.0 <= record.first_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiRoleLine(models.Model):
     _name = "ykk.kpi.department.kpi.role.line"
@@ -444,7 +585,7 @@ class KpiDepartmentKpiRoleLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Text(string="Performance Results (Employee)")
+    performance_result = fields.Float(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
     first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
@@ -456,17 +597,24 @@ class KpiDepartmentKpiRoleLine(models.Model):
     can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
     can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
-    @api.depends("second_evaluator_score", "weight")
+    @api.depends("second_evaluator_score")
     def _compute_total_score(self):
         for record in self:
-            record.total_score = record.second_evaluator_score * (record.weight / 100.0)
+            record.total_score = record.second_evaluator_score
 
-    @api.constrains("first_evaluator_score", "second_evaluator_score")
+    @api.constrains(
+        "performance_result",
+        "first_evaluator_score",
+        "second_evaluator_score",
+    )
     def _check_score_range(self):
         for record in self:
-            for score in (record.first_evaluator_score, record.second_evaluator_score):
-                if score and not (1.0 <= score <= 5.0):
-                    raise ValidationError(_("Score (First/Second Evaluator) ต้องอยู่ระหว่าง 1 ถึง 5"))
+            if not 0.0 <= record.performance_result <= 5.0:
+                raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            if not 0.0 <= record.first_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiBehaviorLine(models.Model):
     _name = "ykk.kpi.department.kpi.behavior.line"
@@ -478,7 +626,7 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Text(string="Performance Results (Employee)")
+    performance_result = fields.Float(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
     first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
@@ -490,17 +638,24 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
     can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
-    @api.depends("second_evaluator_score", "weight")
+    @api.depends("second_evaluator_score")
     def _compute_total_score(self):
         for record in self:
-            record.total_score = record.second_evaluator_score * (record.weight / 100.0)
+            record.total_score = record.second_evaluator_score
 
-    @api.constrains("first_evaluator_score", "second_evaluator_score")
+    @api.constrains(
+        "performance_result",
+        "first_evaluator_score",
+        "second_evaluator_score",
+    )
     def _check_score_range(self):
         for record in self:
-            for score in (record.first_evaluator_score, record.second_evaluator_score):
-                if score and not (1.0 <= score <= 5.0):
-                    raise ValidationError(_("Score (First/Second Evaluator) ต้องอยู่ระหว่าง 1 ถึง 5"))
+            if not 0.0 <= record.performance_result <= 5.0:
+                raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            if not 0.0 <= record.first_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+                raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiAttitudeLine(models.Model):
     _name = "ykk.kpi.department.kpi.attitude.line"
@@ -509,14 +664,8 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
-    achievement_criteria = fields.Text(string="Achievement Criteria")
-    weight = fields.Float(string="Weight")
-    comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Text(string="Performance Results (Employee)")
-    first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
-    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
-    comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
-    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    deduction_score = fields.Integer(string="Deduction Score")
+    frequency = fields.Integer(string="Frequency")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
     group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
@@ -524,14 +673,7 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
     can_edit_second_evaluator = fields.Boolean(related="department_kpi_id.can_edit_second_evaluator")
 
-    @api.depends("second_evaluator_score", "weight")
+    @api.depends("deduction_score", "frequency")
     def _compute_total_score(self):
         for record in self:
-            record.total_score = record.second_evaluator_score * (record.weight / 100.0)
-
-    @api.constrains("first_evaluator_score", "second_evaluator_score")
-    def _check_score_range(self):
-        for record in self:
-            for score in (record.first_evaluator_score, record.second_evaluator_score):
-                if score and not (1.0 <= score <= 5.0):
-                    raise ValidationError(_("Score (First/Second Evaluator) ต้องอยู่ระหว่าง 1 ถึง 5"))
+            record.total_score = record.deduction_score * record.frequency

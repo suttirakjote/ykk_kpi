@@ -15,7 +15,7 @@ GRADE_SELECTION = [
 class KpiAdjustment(models.Model):
     _name = 'kpi.adjustment'
     _description = 'KPI Grade Adjustment'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
 
     name = fields.Char(
@@ -83,7 +83,7 @@ class KpiAdjustment(models.Model):
 
         domain = [
             ('period_id', '=', self.period_id.id),
-            ('state', '=', 'evaluated'),
+            ('state', '=', 'approved'),
         ]
         # เงื่อนไขเพิ่ม: ต้องเป็น Job Level เดียวกัน (ถ้าระบุไว้)
         if self.level_id:
@@ -115,10 +115,28 @@ class KpiAdjustment(models.Model):
             for line in rec.line_ids:
                 line.employee_id.kpi_current_grade = line.new_grade
             rec.state = 'confirmed'
+            rec._schedule_department_manager_activities()
+
+    def _schedule_department_manager_activities(self):
+        department_manager_group = self.env.ref('ykk_kpi.group_ykk_kpi_department_manager',raise_if_not_found=False)
+        if not department_manager_group:
+            return
+        department_managers = department_manager_group.users.filtered('active')
+        for rec in self:
+            for user in department_managers:
+                rec.activity_schedule(
+                    'mail.mail_activity_data_todo',
+                    summary=_('Review KPI Grade Adjustment'),
+                    note=_(
+                        'KPI Grade Adjustment %(document)s has been confirmed.',
+                        document=rec.display_name,
+                    ),
+                    user_id=user.id,
+                    date_deadline=fields.Date.context_today(rec),
+                )
 
     def action_draft(self):
         self.state = 'draft'
-
 
 class KpiAdjustmentLine(models.Model):
     _name = 'kpi.adjustment.line'
@@ -149,6 +167,12 @@ class KpiAdjustmentLine(models.Model):
         compute='_compute_is_changed', store=True, string='Changed')
     history_ids = fields.One2many(
         'kpi.grade.history', 'line_id', string='History')
+    score = fields.Float(string="Score", compute='_compute_score', store=True)
+
+    @api.depends('department_kpi_id', 'department_kpi_id.period_score')
+    def _compute_score(self):
+        for line in self:
+            line.score = line.department_kpi_id.period_score
 
     @api.depends('department_kpi_id', 'department_kpi_id.overall_grade_id')
     def _compute_current_grade(self):

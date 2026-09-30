@@ -33,4 +33,23 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
+    <record id="group_ykk_kpi_create_evaluation" model="res.groups">
+        <field name="name">Create Evaluation</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+
+    <record id="group_ykk_kpi_department_manager" model="res.groups">
+        <field name="name">Department Manager</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="group_ykk_kpi_committee" model="res.groups">
+        <field name="name">Committee</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
 </odoo>

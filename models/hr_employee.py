@@ -30,6 +30,47 @@ class HrEmployee(models.Model):
     ykk_tenure = fields.Char(string="Tenure", compute="_compute_ykk_tenure")
     ykk_salary_month = fields.Float(string="Salary/Month", compute="_compute_ykk_salary_month", store=True)
     ykk_kpi_history_ids = fields.One2many("ykk.kpi.employee.history", "employee_id", string="KPI History")
+    evaluation_rule_ids = fields.One2many(
+        related="user_id.evaluation_rule_ids",
+        string="Evaluation Rules",
+        readonly=True,
+    )
+    first_evaluator_id = fields.Many2one(
+        "res.users",
+        string="First Evaluator",
+        compute="_compute_evaluator_ids",
+        store=True,
+    )
+    second_evaluator_id = fields.Many2one(
+        "res.users",
+        string="Second Evaluator",
+        compute="_compute_evaluator_ids",
+        store=True,
+    )
+
+    @api.depends(
+        "user_id",
+        "user_id.evaluation_rule_ids",
+        "user_id.evaluation_rule_ids.first_evaluator_id",
+        "user_id.evaluation_rule_ids.second_evaluator_id"
+    )
+    def _compute_evaluator_ids(self):
+        for employee in self:
+            latest_rule = employee.evaluation_rule_ids.filtered("active").sorted(
+                key=lambda rule: rule.id,
+                reverse=True,
+            )[:1]
+            employee.first_evaluator_id = (
+                latest_rule.first_evaluator_id if latest_rule else False
+            )
+            employee.second_evaluator_id = (
+                latest_rule.second_evaluator_id if latest_rule else False
+            )
+
+    @api.onchange("ykk_kpi_level_id")
+    def _onchange_ykk_kpi_level_id(self):
+        for employee in self:
+            employee.ykk_kpi_group_position_id = employee.ykk_kpi_level_id.group_position_id
 
     @api.depends("ykk_thai_prefix", "ykk_thai_first_name", "ykk_thai_last_name", "name")
     def _compute_ykk_thai_full_name(self):
@@ -70,13 +111,13 @@ class HrEmployee(models.Model):
         for employee in self:
             if employee.ykk_start_work_date:
                 if employee.ykk_start_work_date > today:
-                    employee.ykk_tenure = "0 วัน 0 เดือน 0 ปี"
+                    employee.ykk_tenure = "0 ปี / 0 เดือน / 0 วัน"
                     continue
                 tenure = relativedelta(today, employee.ykk_start_work_date)
-                employee.ykk_tenure = "%d วัน %d เดือน %d ปี" % (
-                    tenure.days,
-                    tenure.months,
+                employee.ykk_tenure = "%d ปี / %d เดือน / %d วัน" % (
                     tenure.years,
+                    tenure.months,
+                    tenure.days
                 )
             else:
                 employee.ykk_tenure = ""
@@ -95,3 +136,11 @@ class HrEmployee(models.Model):
         for employee in self:
             if employee.ykk_employee_code and employee.display_name:
                 employee.display_name = "[%s] %s" % (employee.ykk_employee_code, employee.display_name)
+
+
+    def action_create_user(self):
+        self.ensure_one()
+        res = super().action_create_user()
+        res['context']['default_login'] = self.ykk_employee_code
+        res['context']['default_image_1920'] = self.image_1920
+        return res

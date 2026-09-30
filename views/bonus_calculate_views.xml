@@ -30,6 +30,7 @@
                         <group>
                             <field name="bonus_month"/>
                             <field name="work_day_of_year"/>
+                            <field name="cola"/>
                         </group>
                     </group>
                     <notebook>
