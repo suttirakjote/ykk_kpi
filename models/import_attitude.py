@@ -1,6 +1,5 @@
 import base64
 import io
-from datetime import date
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -37,6 +36,11 @@ class ImportAttitude(models.Model):
         string="Date",
         default=fields.Date.context_today,
         required=True,
+        tracking=True,
+    )
+    period_id = fields.Many2one(
+        "ykk.kpi.period",
+        string="Period",
         tracking=True,
     )
     user_id = fields.Many2one(
@@ -115,6 +119,16 @@ class ImportAttitude(models.Model):
                 )
             )
         return int(number)
+
+    @staticmethod
+    def _get_attitude_line_code(attitude_line):
+        """Return the stored code, or extract it from legacy '[CODE] Name' data."""
+        if attitude_line.hr_evaluation_code:
+            return attitude_line.hr_evaluation_code.strip()
+        name = (attitude_line.name or "").strip()
+        if name.startswith("[") and "]" in name:
+            return name[1:name.index("]")].strip()
+        return ""
 
     def _parse_rows(self):
         self.ensure_one()
@@ -219,6 +233,8 @@ class ImportAttitude(models.Model):
 
     def _ensure_import_lines(self):
         self.ensure_one()
+        if not self.period_id:
+            raise ValidationError(_("Please select a Period."))
         if not self.upload_file:
             raise ValidationError(_("Please upload an Excel file."))
         if not self.line_ids:
@@ -228,6 +244,8 @@ class ImportAttitude(models.Model):
 
     def action_inprocess(self):
         self.ensure_one()
+        if not self.period_id:
+            raise ValidationError(_("Please select a Period."))
         if not self.upload_file:
             raise ValidationError(_("Please upload an Excel file."))
         self.write({
@@ -282,21 +300,18 @@ class ImportAttitude(models.Model):
                 )
                 continue
 
-            year_start = date(line.year, 1, 1)
-            year_end = date(line.year, 12, 31)
             evaluations = evaluation_model.search([
                 ("employee_id", "=", employee.id),
                 ("company_id", "=", self.company_id.id),
-                ("period_id.start_date", "<=", year_end),
-                ("period_id.end_date", ">=", year_start),
+                ("period_id", "=", self.period_id.id),
             ])
             if not evaluations:
                 errors.append(
                     _(
                         "Evaluation was not found for Employee Code %(code)s "
-                        "in %(year)s.",
+                        "in Period %(period)s.",
                         code=line.employee_code,
-                        year=line.year,
+                        period=self.period_id.name,
                     )
                 )
                 continue
@@ -304,11 +319,15 @@ class ImportAttitude(models.Model):
             for evaluation in evaluations:
                 for attitude_type, label in ATTITUDE_COLUMNS.items():
                     configs = configurations_by_type[attitude_type]
-                    config_names = set(configs.mapped("name")) | set(
-                        configs.mapped("display_name")
-                    )
+                    config_codes = {
+                        code.strip()
+                        for code in configs.mapped("code")
+                        if code
+                    }
                     target_lines = evaluation.attitude_line_ids.filtered(
-                        lambda attitude_line: attitude_line.name in config_names
+                        lambda attitude_line: self._get_attitude_line_code(
+                            attitude_line
+                        ) in config_codes
                     )
                     if not target_lines:
                         errors.append(

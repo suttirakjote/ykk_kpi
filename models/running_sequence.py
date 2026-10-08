@@ -175,7 +175,4 @@ class KpiDepartmentKpi(models.Model):
                     else sequence_number
                 )
                 
-        res = super().create(vals_list)
-        for rec in res:
-            rec.action_first_evaluate_activity()
-        return res
+        return super().create(vals_list)

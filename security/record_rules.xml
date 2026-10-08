@@ -22,11 +22,7 @@
     <record id="rule_ykk_kpi_department_kpi_user" model="ir.rule">
         <field name="name">Evaluation: Own Employee or Department</field>
         <field name="model_id" ref="model_ykk_kpi_department_kpi"/>
-        <field name="domain_force">[
-            '|',
-            ('employee_id.user_id', '=', user.id),
-            ('department_id', 'in', user.employee_ids.department_id.ids)
-        ]</field>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('group_ykk_kpi_user'))]"/>
     </record>
 

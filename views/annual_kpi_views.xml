@@ -69,6 +69,7 @@
             <form string="KPI/Goal Setting">
                 <header>
 
+                    <button name="action_send_approve" string="Send Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_1_approve" string="1st Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_2_approve" string="2nd Approve" type="object" class="btn-primary" invisible="state != '1_approve'"/>
                     <button name="action_confirm" string="Confirm" type="object" class="btn-primary" invisible="state != '2_approve'"/>
@@ -110,7 +111,10 @@
                         </group>
                         <group>
                             <field name="period_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'"/>
-                            <field name="template_id" options="{'no_create': True}" readonly="group_kpi_user or state == 'done'" domain="[('department_id', '=', department_id), ('active', '=', True)]"/>
+                            <field name="template_id"
+                                options="{'no_create': True}"
+                                readonly="group_kpi_user or state == 'done'"
+                                domain="[('employee_ids', 'in', [employee_id]), ('department_id', '=', department_id), ('level_id', '=', level_id), ('period_id', '=', period_id), ('state', '=', 'done')]"/>
                             <field name="evaluation_id" options="{'no_create': True}" readonly="1"/>
                             <field name="date" readonly="1"/>
                             <field name="responsible_id" invisible="1"/>
@@ -150,11 +154,13 @@
                             </field>
                         </page>
                         <page string="Attitude Evaluation">
-                            <field name="attitude_line_ids" readonly="group_kpi_user or state == 'done'">
+                            <field name="attitude_line_ids" readonly="1" force_save="1">
                                 <list editable="top">
                                     <field name="name"/>
+                                    <field name="hr_evaluation_code" column_invisible="True"/>
                                     <!-- <field name="achievement_criteria"/> -->
                                     <field name="criteria_details"/>
+                                    <field name="deduction_score"/>
                                     <!-- <field name="weight" sum="Total Weight"/> -->
                                 </list>
                             </field>

@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from odoo.tools import float_compare
 
 
@@ -180,6 +180,15 @@ class KpiAnnualKpi(models.Model):
                 )
         return super().create(vals_list)
 
+    def write(self, vals):
+        result = super().write(vals)
+        positive_attitude_lines = self.mapped("attitude_line_ids").filtered(
+            lambda line: line.deduction_score > 0
+        )
+        for line in positive_attitude_lines:
+            line.write({"deduction_score": -line.deduction_score})
+        return result
+
     @api.onchange("employee_id", "period_id")
     def _onchange_employee_id(self):
         for record in self:
@@ -265,37 +274,77 @@ class KpiAnnualKpi(models.Model):
             if record.employee_id:
                 evaluations = self.env["ykk.kpi.hr.evaluation"].search([
                     ("type", "=", "attitude"),
-                    ("level_ids", "in", [record.employee_id.ykk_kpi_level_id.id])])
+                    ("company_id", "=", record.company_id.id),
+                    ("active", "=", True)])
                 attitude_line_commands.extend([
                     (0, 0, {
                         "name": evaluation.display_name,
-                        "achievement_criteria": evaluation.achievement_criteria,
-                        "criteria_details": evaluation.criteria_details,
+                        "hr_evaluation_code": evaluation.code,
+                        # "achievement_criteria": evaluation.achievement_criteria,
+                        # "criteria_details": evaluation.criteria_details,
+                        "deduction_score": -abs(evaluation.deduction_score or 0),
                     })
                     for evaluation in evaluations
                 ])
             record.attitude_line_ids = attitude_line_commands
+
+    def action_send_approve(self):
+        self.ensure_one()
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+
+        is_kpi_admin = self.env.user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        if self.employee_id.user_id != self.env.user and not is_kpi_admin:
+            raise UserError(_("Only the employee or KPI Administrator can send for approval."))
+
+        activity_type = self.env.ref("ykk_kpi.mail_activity_first_evaluator_to_validate")
+        existing_activity = self.activity_ids.filtered(lambda activity: activity.activity_type_id == activity_type
+            and activity.user_id == rule_id.first_evaluator_id)
+        if existing_activity:
+            message = _("An approval activity has already been sent.")
+            notification_type = "warning"
+        else:
+            self.action_first_evaluate_activity()
+            message = _("The approval activity was sent successfully.")
+            notification_type = "success"
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Send Approve"),
+                "message": message,
+                "type": notification_type,
+                "sticky": False,
+                "next": {
+                    "type": "ir.actions.client",
+                    "tag": "soft_reload",
+                },
+            },
+        }
 
     def action_1_approve(self):
         self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
         if rule_id.first_evaluator_id != self.env.user:
             raise UserError(_("You do not have permission as the First Evaluator."))
-        # Activity
+        if not rule_id.second_evaluator_id:
+            raise ValidationError(
+                _("Please configure the Second Evaluator in the Evaluation Rule.")
+            )
         self.write({"state": "1_approve"})
-        self.action_first_evaluate_activity()
+        self.activity_update()
+        self.action_second_evaluate_activity()
 
     def action_2_approve(self):
         self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
         if rule_id.second_evaluator_id != self.env.user:
             raise UserError(_("You do not have permission as the Second Evaluator."))
-        # Update State and Activity
-        self.activity_update()
         self.write({"state": "2_approve"})
-        self.action_second_evaluate_activity()
+        self.activity_update()
 
     def action_confirm(self):
+        self._check_weight_total()
         # Update State and Activity
         self.activity_update()
         self.write({"state": "waiting_approve"})
@@ -364,9 +413,9 @@ class KpiAnnualKpi(models.Model):
         evaluation_model = self.env["ykk.kpi.department.kpi"]
 
         for record in self:
-            if record.state != "done" or record.evaluation_id:
-                skipped_count += 1
-                continue
+            # if record.state != "done" or record.evaluation_id:
+            #     skipped_count += 1
+            #     continue
 
             evaluation_model.create({
                 "employee_id": record.employee_id.id,
@@ -375,6 +424,14 @@ class KpiAnnualKpi(models.Model):
                 "responsible_id": record.responsible_id.id,
                 "date": record.date,
                 "company_id": record.company_id.id,
+                "attitude_line_ids": [
+                    (0, 0, {
+                        "name": line.name,
+                        "hr_evaluation_code": line.hr_evaluation_code,
+                        "deduction_score": line.deduction_score,
+                    })
+                    for line in record.attitude_line_ids
+                ],
             })
             created_count += 1
 
@@ -541,6 +598,21 @@ class KpiAnnualKpiAttitudeLine(models.Model):
 
     annual_kpi_id = fields.Many2one("ykk.kpi.annual.kpi", string="KPI/Goal Setting", required=True, ondelete="cascade")
     name = fields.Char(string="Goal", required=True)
+    hr_evaluation_code = fields.Char(string="HR Evaluation Code", index=True)
     achievement_criteria = fields.Text(string="Achievement Criteria")
     criteria_details = fields.Text(string="Criteria Details")
     weight = fields.Float(string="Weight")
+    deduction_score = fields.Integer(string="Deduction Score")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if "deduction_score" in vals:
+                vals["deduction_score"] = -abs(vals["deduction_score"] or 0)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if "deduction_score" in vals:
+            vals = dict(vals)
+            vals["deduction_score"] = -abs(vals["deduction_score"] or 0)
+        return super().write(vals)

@@ -1,5 +1,6 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, ValidationError, UserError
+from odoo.tools.float_utils import float_round
 
 class KpiDepartmentKpi(models.Model):
     _name = "ykk.kpi.department.kpi"
@@ -13,6 +14,7 @@ class KpiDepartmentKpi(models.Model):
             ("draft", "Self Evaluate"),
             ("inprocess", "1st Evaluate"),
             ("evaluated", "2nd Evaluate"),
+            ("2_evaluated", "Evaluated"),
             ("approved", "Approved"),
             ("cancel", "Cancel"),
         ],
@@ -66,14 +68,31 @@ class KpiDepartmentKpi(models.Model):
         compute="_compute_tab_totals",
         store=True,
     )
-    period_score = fields.Integer(string="Period Score", compute="_compute_period_grade")
+    period_score = fields.Float(
+        string="Period Score",
+        digits="KPI Score",
+        compute="_compute_period_grade",
+    )
     period_grade_id = fields.Many2one("ykk.kpi.grade", string="Period Grade", compute="_compute_period_grade")
     summary_parent_kpi_ids = fields.One2many(
         "ykk.kpi.department.kpi.summary.line",
         "department_kpi_id",
         string="Parent KPIs",
     )
-    overall_score = fields.Integer(string="Overall Score", compute="_compute_overall_grade")
+    overall_score = fields.Float(
+        string="Overall Score",
+        digits="KPI Score",
+        compute="_compute_overall_grade",
+    )
+    adjust_grade = fields.Char(
+        string="Adjust Grade",
+        compute="_compute_adjust_grade",
+    )
+    adjust_score = fields.Float(
+        string="Adjust Score",
+        digits="KPI Score",
+        compute="_compute_adjust_score",
+    )
     overall_grade_id = fields.Many2one("ykk.kpi.grade", string="Overall Grade", compute="_compute_overall_grade")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     group_kpi_user = fields.Boolean(compute="_compute_group_kpi_user")
@@ -212,7 +231,8 @@ class KpiDepartmentKpi(models.Model):
                 attitude_line_commands.extend([
                     (0, 0, {
                         "name": evaluation.name,
-                        "deduction_score": evaluation.deduction_score,
+                        "hr_evaluation_code": evaluation.code,
+                        "deduction_score": -abs(evaluation.deduction_score or 0),
                     })
                     for evaluation in evaluations
                 ])
@@ -220,15 +240,60 @@ class KpiDepartmentKpi(models.Model):
             record.period_id = annual.period_id if annual else False
             record.attitude_line_ids = attitude_line_commands
 
+    def action_send_approve(self):
+        self.ensure_one()
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        if not rule_id.first_evaluator_id:
+            raise ValidationError(
+                _("Please configure the First Evaluator in the Evaluation Rule.")
+            )
+        is_kpi_admin = self.env.user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        if self.employee_id.user_id != self.env.user and not is_kpi_admin:
+            raise UserError(
+                _("Only the employee or KPI Administrator can send for approval.")
+            )
+
+        activity_type = self.env.ref(
+            "ykk_kpi.mail_activity_first_evaluator_to_validate"
+        )
+        existing_activity = self.activity_ids.filtered(
+            lambda activity: activity.activity_type_id == activity_type
+            and activity.user_id == rule_id.first_evaluator_id
+        )
+        if existing_activity:
+            message = _("An approval activity has already been sent.")
+            notification_type = "warning"
+        else:
+            self.action_first_evaluate_activity()
+            message = _("The approval activity was sent successfully.")
+            notification_type = "success"
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Send Approve"),
+                "message": message,
+                "type": notification_type,
+                "sticky": False,
+                "next": {
+                    "type": "ir.actions.client",
+                    "tag": "soft_reload",
+                },
+            },
+        }
+
     # 1st Evaluate
     def action_confirm(self):
         self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
-        if self.employee_id.user_id != self.env.user:
-            if rule_id.first_evaluator_id != self.env.user:
-                raise UserError(_("You do not have permission as the Employee or First Evaluator."))
-        # Update State and Activity
+        if rule_id.first_evaluator_id != self.env.user:
+            raise UserError(_("You do not have permission as the First Evaluator."))
+        if not rule_id.second_evaluator_id:
+            raise ValidationError(_("Please configure the Second Evaluator in the Evaluation Rule."))
         self.write({"state": "inprocess"})
+        self.activity_update()
         self.action_second_evaluate_activity()
 
     # 2nd Evaluate
@@ -253,12 +318,13 @@ class KpiDepartmentKpi(models.Model):
         self.activity_update()
         self.write({"state": "evaluated"})
 
+    # Evaluated
     def action_approve(self):
         records_to_approve = self.filtered(lambda record: record.state == "evaluated")
         updated_count = len(records_to_approve)
         skipped_count = len(self) - updated_count
         if records_to_approve:
-            records_to_approve.write({"state": "approved"})
+            records_to_approve.write({"state": "2_evaluated"})
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -278,6 +344,10 @@ class KpiDepartmentKpi(models.Model):
                 },
             },
         }
+
+    # Approve
+    def action_evaluated(self):
+        self.write({"state": "approved"})
 
     def action_cancel(self):
         self.write({"state": "cancel"})
@@ -350,10 +420,14 @@ class KpiDepartmentKpi(models.Model):
     # -----------------------------------------------------
     def _find_grade_by_score(self, score):
         self.ensure_one()
+        # Grade codes are configured as whole-number values. Keep the existing
+        # grade selection behavior while allowing the displayed score to retain
+        # its decimal portion.
+        grade_code = str(int(score))
         return self.env["ykk.kpi.grade"].search(
             [
                 ("company_id", "=", self.company_id.id),
-                ("code", "=", str(score)),
+                ("code", "=", grade_code),
             ],
             order="id desc",
             limit=1,
@@ -381,7 +455,11 @@ class KpiDepartmentKpi(models.Model):
             ]:
                 if record[line_field]:
                     tab_scores.append(record[total_field])
-            record.period_score = int(sum(tab_scores) / len(tab_scores)) if tab_scores else 0
+            record.period_score = (
+                float_round(sum(tab_scores) / len(tab_scores), precision_digits=2)
+                if tab_scores
+                else 0.0
+            )
             record.period_grade_id = record._find_grade_by_score(record.period_score) if tab_scores else False
 
     def _grade_code_to_score(self, grade):
@@ -411,12 +489,49 @@ class KpiDepartmentKpi(models.Model):
                 for score in (record._grade_code_to_score(grade) for grade in grades)
                 if score is not False
             ]
-            record.overall_score = int(sum(grade_scores) / len(grade_scores)) if grade_scores else 0
+            record.overall_score = (
+                float_round(sum(grade_scores) / len(grade_scores), precision_digits=2)
+                if grade_scores
+                else 0.0
+            )
             record.overall_grade_id = (
                 record._find_grade_by_score(record.overall_score)
                 if grade_scores
                 else False
             )
+
+    def _compute_adjust_grade(self):
+        adjustment_line_model = self.env["kpi.adjustment.line"]
+        for record in self:
+            grade = False
+            if record.id:
+                line = adjustment_line_model.search(
+                    [("department_kpi_id", "=", record.id)],
+                    order="id desc",
+                    limit=1,
+                )
+                if line:
+                    grade = line.new_grade if line.is_changed else line.current_grade
+            record.adjust_grade = grade
+
+    @api.depends("adjust_grade", "company_id")
+    def _compute_adjust_score(self):
+        for record in self:
+            grade = record._get_adjust_grade_record()
+            record.adjust_score = grade.end_score if grade else 0.0
+
+    def _get_adjust_grade_record(self):
+        """Convert the adjusted grade name to its grade configuration record."""
+        self.ensure_one()
+        if not self.adjust_grade:
+            return self.env["ykk.kpi.grade"]
+        return self.env["ykk.kpi.grade"].search(
+            [
+                ("name", "=", self.adjust_grade),
+                ("company_id", "=", self.company_id.id),
+            ],
+            limit=1,
+        )
 
 class KpiDepartmentKpiSummaryLine(models.Model):
     _name = "ykk.kpi.department.kpi.summary.line"
@@ -664,6 +779,7 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
+    hr_evaluation_code = fields.Char(string="HR Evaluation Code", index=True)
     deduction_score = fields.Integer(string="Deduction Score")
     frequency = fields.Integer(string="Frequency")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)

@@ -142,9 +142,9 @@ Second Evaluator Score * Weight / 100
 
 Summary fields:
 
-- `Period Grade`: averages the totals of tabs that contain lines, truncates decimals with `int()`, then finds a Grade by matching `ykk.kpi.grade.code`.
+- `Period Score`: averages the totals of tabs that contain lines and rounds the result to two decimal places. `Period Grade` keeps the existing whole-number grade-code lookup behavior.
 - `Parent KPIs`: persistent summary lines using `ykk.kpi.department.kpi.summary.line`.
-- `Overall Grade`: averages the numeric grade codes from the current Period Grade and all selected Parent KPI Grades, truncates decimals with `int()`, then finds the matching Grade.
+- `Overall Score`: averages the numeric grade codes from the current Period Grade and all selected Parent KPI Grades and rounds the result to two decimal places. `Overall Grade` keeps the existing whole-number grade-code lookup behavior.
 
 Each Parent KPI can be added only once per Department KPI summary.
 

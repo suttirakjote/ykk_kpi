@@ -9,6 +9,7 @@
         <field name="arch" type="xml">
             <field name="overall_score" position="after">
                 <field name="adjust_grade"/>
+                <field name="adjust_score"/>
             </field>
         </field>
     </record>

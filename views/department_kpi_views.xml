@@ -51,7 +51,7 @@
                 <field name="activity_ids" widget="list_activity"/>
                 <field name="state" widget="badge"
                     decoration-info="state == 'draft'"
-                    decoration-warning="state in ['inprocess', 'evaluated']"
+                    decoration-warning="state in ['inprocess', 'evaluated', '2_evaluated']"
                     decoration-success="state == 'approved'"/>
             </list>
         </field>
@@ -63,17 +63,19 @@
         <field name="arch" type="xml">
             <form string="Evaluation">
                 <header>
+                    <button name="action_send_approve" string="Send Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_confirm" string="1st Evaluate" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_done" string="2nd Evaluate" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
                     <button name="action_approve"
-                        string="Approve"
+                        string="Evaluated"
                         type="object"
                         class="btn-primary"
                         groups="ykk_kpi.group_ykk_kpi_approve"
                         invisible="state != 'evaluated'"/>
+                    <button name="action_evaluated" string="Approve" type="object" invisible="state != '2_evaluated'"/>
                     <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancel'"/>
                     <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,evaluated,approved"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,evaluated,2_evaluated,approved"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -103,24 +105,6 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Interview Performance">
-                            <field name="interview_line_ids">
-                                <list editable="top">
-                                    <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"/>
-                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria" optional="show"/>
-                                    <field name="weight" optional="show"/>
-                                    <field name="comment_employee" optional="show"/>
-                                    <field name="performance_result" optional="show"/>
-                                    <field name="first_evaluator_comment" optional="show"/>
-                                    <field name="first_evaluator_score" optional="show"/>
-                                    <field name="comment_second_evaluator" optional="show"/>
-                                    <field name="second_evaluator_score" optional="show"/>
-                                    <field name="total_score" string="Score"/>
-                                </list>
-                            </field>
-                        </page>
                         <!-- <page string="Performance Evaluation">
                             <field name="performance_line_ids">
                                 <list editable="top">
@@ -356,7 +340,7 @@
                             </field>
                         </page> -->
                         <page string="Attitude Evaluation">
-                            <field name="attitude_line_ids">
+                            <field name="attitude_line_ids" readonly="1" force_save="1">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
                                     <field name="can_edit_employee" column_invisible="True"/>
@@ -364,6 +348,7 @@
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
                                     <field name="name"/>
+                                    <field name="hr_evaluation_code" column_invisible="True"/>
                                     <field name="deduction_score" readonly="evaluation_state != 'draft'"/>
                                     <field name="frequency" readonly="evaluation_state != 'draft'"/>
                                     <field name="total_score" string="Score"/>
@@ -409,6 +394,24 @@
                                         </list>
                                     </field>
                             </group>
+                        </page>
+                        <page string="Interview Performance">
+                            <field name="interview_line_ids">
+                                <list editable="top">
+                                    <field name="evaluation_state" column_invisible="True"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
+                                    <field name="achievement_criteria" optional="show"/>
+                                    <field name="weight" optional="show"/>
+                                    <field name="comment_employee" optional="show"/>
+                                    <field name="performance_result" optional="show"/>
+                                    <field name="first_evaluator_comment" optional="show"/>
+                                    <field name="first_evaluator_score" optional="show"/>
+                                    <field name="comment_second_evaluator" optional="show"/>
+                                    <field name="second_evaluator_score" optional="show"/>
+                                    <field name="total_score" string="Score"/>
+                                </list>
+                            </field>
                         </page>
                         <page name="description_page" string="Description">
                             <field name="description" type="html" options="{'collaborative': true, 'resizable': false}" placeholder="Add a description..."/>
