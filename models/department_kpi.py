@@ -232,7 +232,7 @@ class KpiDepartmentKpi(models.Model):
                     (0, 0, {
                         "name": evaluation.name,
                         "hr_evaluation_code": evaluation.code,
-                        "deduction_score": -abs(evaluation.deduction_score or 0),
+                        "deduction_score": -abs(evaluation.deduction_score or 0)
                     })
                     for evaluation in evaluations
                 ])
@@ -442,25 +442,49 @@ class KpiDepartmentKpi(models.Model):
         "role_line_ids",
         "behavior_line_ids",
         "attitude_line_ids",
+        "annual_id.performance_weight",
+        "annual_id.role_based_behavior_weight",
+        "annual_id.behavior_weight",
+        "annual_id.attitude_weight",
         "company_id",
     )
     def _compute_period_grade(self):
+        tabs = [
+            ("performance_line_ids", "performance_tab_total", "performance_weight"),
+            ("role_line_ids", "role_tab_total", "role_based_behavior_weight"),
+            ("behavior_line_ids", "behavior_tab_total", "behavior_weight"),
+            ("attitude_line_ids", "attitude_tab_evaluation", "attitude_weight"),
+        ]
         for record in self:
-            tab_scores = []
-            for line_field, total_field in [
-                ("performance_line_ids", "performance_tab_total"),
-                ("role_line_ids", "role_tab_total"),
-                ("behavior_line_ids", "behavior_tab_total"),
-                ("attitude_line_ids", "attitude_tab_evaluation"),
-            ]:
-                if record[line_field]:
-                    tab_scores.append(record[total_field])
-            record.period_score = (
-                float_round(sum(tab_scores) / len(tab_scores), precision_digits=2)
-                if tab_scores
-                else 0.0
-            )
-            record.period_grade_id = record._find_grade_by_score(record.period_score) if tab_scores else False
+            # Weighted by Indicator Weight: weight 0 excludes the tab even if it
+            # has lines; a weighted tab without lines counts as 0.
+            weighted_sum = 0.0
+            total_weight = 0.0
+            for line_field, score_field, weight_field in tabs:
+                weight = record[weight_field] or 0
+                if weight <= 0:
+                    continue
+                score = record[score_field] if record[line_field] else 0.0
+                weighted_sum += score * weight
+                total_weight += weight
+
+            if total_weight:
+                score = weighted_sum / total_weight
+            else:
+                # No Indicator Weight (no KPI/Goal Setting): plain average of tabs with lines.
+                plain_scores = [
+                    record[score_field]
+                    for line_field, score_field, _weight_field in tabs
+                    if record[line_field]
+                ]
+                score = sum(plain_scores) / len(plain_scores) if plain_scores else None
+
+            if score is None:
+                record.period_score = 0.0
+                record.period_grade_id = False
+            else:
+                record.period_score = float_round(score, precision_digits=2)
+                record.period_grade_id = record._find_grade_by_score(record.period_score)
 
     def _grade_code_to_score(self, grade):
         try:
@@ -779,11 +803,10 @@ class KpiDepartmentKpiAttitudeLine(models.Model):
     department_kpi_id = fields.Many2one("ykk.kpi.department.kpi", string="Evaluation")
     evaluation_state = fields.Selection(related="department_kpi_id.state", string="Evaluation Status")
     name = fields.Char(string="Goal")
-    hr_evaluation_code = fields.Char(string="HR Evaluation Code", index=True)
     deduction_score = fields.Integer(string="Deduction Score")
     frequency = fields.Integer(string="Frequency")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
-
+    hr_evaluation_code = fields.Char(string="HR Evaluation Code", index=True)
     group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
     can_edit_employee = fields.Boolean(related="department_kpi_id.can_edit_employee")
     can_edit_first_evaluator = fields.Boolean(related="department_kpi_id.can_edit_first_evaluator")
