@@ -47,6 +47,22 @@
                         </field>
                     </group>
                 </page>
+                <page string="Additional Departments" name="ykk_kpi_additional_departments">
+                    <field name="department_ids" nolabel="1" options="{'no_create': True, 'no_open': True}">
+                        <list>
+                            <field name="name"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Excluded Employees" name="ykk_kpi_excluded_employees">
+                    <field name="employee_ids" nolabel="1"
+                        options="{'no_create': True, 'no_open': True}">
+                        <list>
+                            <field name="name"/>
+                            <field name="department_id" optional="show"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
 
 

@@ -23,6 +23,30 @@ class HrEmployee(models.Model):
     )
     ykk_kpi_level_id = fields.Many2one("ykk.kpi.level",string="Job Level")
     ykk_kpi_group_position_id = fields.Many2one("ykk.kpi.group.position", string="Group Position")
+    department_ids = fields.Many2many(
+        "hr.department",
+        "hr_employee_ykk_kpi_department_rel",
+        "employee_id",
+        "department_id",
+        string="Additional Departments",
+        help="Additional departments whose KPI/Goal Setting documents this employee's user can access.",
+    )
+    employee_ids = fields.Many2many(
+        "hr.employee",
+        "hr_employee_ykk_kpi_excluded_employee_rel",
+        "employee_id",
+        "excluded_employee_id",
+        string="Excluded Employees",
+        help="Employees whose KPI/Goal Setting documents must be hidden from this employee's user.",
+    )
+    excluded_by_employee_ids = fields.Many2many(
+        "hr.employee",
+        "hr_employee_ykk_kpi_excluded_employee_rel",
+        "excluded_employee_id",
+        "employee_id",
+        string="Excluded By Employees",
+        help="Employees whose users have excluded this employee from KPI access.",
+    )
     ykk_kpi_employee_type = fields.Selection([
             ("monthly", "Monthly"),
             ("daily", "Daily")], string="Employee Type")

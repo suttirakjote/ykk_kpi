@@ -16,6 +16,7 @@ class KpiLevel(models.Model):
         ("all", "All"),
         ("role_based_behavior", "Role-based Behavior Evaluation"),
         ("behavior", "Behavior Evaluation")], string="Evaluation Topic", default="all")
+    show_attitude = fields.Boolean(string="Show Attitude")
     indicator_weight = fields.Integer(string="Indicator Weight (%)")
     merit = fields.Float(string="Merit")
     att = fields.Float(string="Att.")

@@ -63,16 +63,10 @@
         <field name="arch" type="xml">
             <form string="Evaluation">
                 <header>
-                    <button name="action_send_approve" string="Send Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_confirm" string="1st Evaluate" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_done" string="2nd Evaluate" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
-                    <button name="action_approve"
-                        string="Evaluated"
-                        type="object"
-                        class="btn-primary"
-                        groups="ykk_kpi.group_ykk_kpi_approve"
-                        invisible="state != 'evaluated'"/>
-                    <button name="action_evaluated" string="Approve" type="object" invisible="state != '2_evaluated'"/>
+                    <button name="action_send_first_approve" string="Send Approve 1st Evaluate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_send_second_approve" string="Send Approve 2st Evaluate" type="object" class="btn-primary" invisible="state != 'inprocess'"/>
+                    <button name="action_evaluated" string="Evaluated" type="object" class="btn-primary" invisible="state != 'evaluated'"/>
+
                     <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancel'"/>
                     <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,inprocess,evaluated,2_evaluated,approved"/>
@@ -86,6 +80,8 @@
                     <group>
                         <group>
                             <field name="group_kpi_user" invisible="1"/>
+                            <field name="group_kpi_committee" invisible="1"/>
+                            <field name="show_attitude" invisible="1"/>
                             <field name="current_employee" invisible="1"/>
                             <field name="can_edit_employee" invisible="1"/>
                             <field name="can_edit_first_evaluator" invisible="1"/>
@@ -129,101 +125,173 @@
                         </page> -->
 
                         <!-- Current Employee -->
-                        <page string="Performance Evaluation" invisible="not current_employee">
+                        <page string="Performance Evaluation" invisible="group_kpi_committee or (not current_employee)">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="performance_line_ids">
-                                <list editable="top">
+                                <list editable="top" create="0" delate="0">
                                     <field name="group_kpi_user" column_invisible="True"/>
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="1" force_save="1"/>
                                     <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="weight" readonly="group_kpi_user" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                 </list>
                             </field>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_performance_score" string="Total Score"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
                         </page>
-                        <page string="Role-based Behavior Evaluation" invisible="not current_employee or evaluation_topic == 'behavior'">
+                        <page string="Role-based Behavior Evaluation" invisible="group_kpi_committee or (not current_employee or evaluation_topic == 'behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="role_line_ids">
-                                <list editable="top">
+                                <list editable="top" create="0" delate="0">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Behavior Evaluation" invisible="not current_employee or evaluation_topic == 'role_based_behavior'">
+                        <page string="Behavior Evaluation" invisible="group_kpi_committee or (not current_employee or evaluation_topic == 'role_based_behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="behavior_line_ids">
-                                <list editable="top">
+                                <list editable="top" create="0" delate="0">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                 </list>
                             </field>
                         </page>
                         <!-- First Evaluator -->
-                        <page string="Performance Evaluation" invisible="not can_edit_first_evaluator">
+                        <page string="Performance Evaluation" invisible="group_kpi_committee or (not can_edit_first_evaluator)">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="performance_line_ids">
-                                <list editable="top">
+                                <list editable="top" >
                                     <field name="group_kpi_user" column_invisible="True"/>
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="1" force_save="1"/>
                                     <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="weight" readonly="group_kpi_user" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                 </list>
                             </field>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_performance_score" string="Total Score"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
                         </page>
-                        <page string="Role-based Behavior Evaluation" invisible="not can_edit_first_evaluator or evaluation_topic == 'behavior'">
+                        <page string="Role-based Behavior Evaluation" invisible="group_kpi_committee or (not can_edit_first_evaluator or evaluation_topic == 'behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="role_line_ids">
                                 <list editable="top">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Behavior Evaluation" invisible="not can_edit_first_evaluator or evaluation_topic == 'role_based_behavior'">
+                        <page string="Behavior Evaluation" invisible="group_kpi_committee or (not can_edit_first_evaluator or evaluation_topic == 'role_based_behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="behavior_line_ids">
                                 <list editable="top">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                 </list>
                             </field>
                         </page>
                         <!-- Second Evaluator -->
-                        <page string="Performance Evaluation" invisible="not can_edit_second_evaluator">
+                        <page string="Performance Evaluation" invisible="not group_kpi_committee and (not can_edit_second_evaluator)">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="performance_line_ids">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
@@ -231,34 +299,49 @@
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="group_kpi_user"/>
+                                    <field name="goal_id" options="{'no_create': True, 'no_open': True}" readonly="1" force_save="1"/>
                                     <button name="action_view_goal" type="object" icon="fa-search" title="View Goal" invisible="not goal_id"/>
-                                    <field name="achievement_criteria" readonly="group_kpi_user" optional="show"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="weight" readonly="group_kpi_user" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                     <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
-                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
-                                    <field name="total_score" string="Score" readonly="group_kpi_user"/>
+                                    <field name="second_evaluator_score" decoration-danger="second_evaluator_score == 0" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="total_score" string="Score" readonly="1" force_save="1"/>
                                 </list>
                             </field>
+                            <group>
+                                <group colspan="2"/>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_performance_score" string="Total Score"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
                         </page>
-                        <page string="Role-based Behavior Evaluation" invisible="not can_edit_second_evaluator or evaluation_topic == 'behavior'">
+                        <page string="Role-based Behavior Evaluation" invisible="not group_kpi_committee and (not can_edit_second_evaluator or evaluation_topic == 'behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="role_line_ids">
                                 <list editable="top">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                     <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
-                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" decoration-danger="second_evaluator_score == 0" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
                                     <field name="total_score" string="Total"/>
                                 </list>
                             </field>
@@ -270,20 +353,29 @@
                             </group>
                             <div class="clearfix"/>
                         </page>
-                        <page string="Behavior Evaluation" invisible="not can_edit_second_evaluator or evaluation_topic == 'role_based_behavior'">
+                        <page string="Behavior Evaluation" invisible="not group_kpi_committee and (not can_edit_second_evaluator or evaluation_topic == 'role_based_behavior')">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="behavior_line_ids">
                                 <list editable="top">
                                     <field name="can_edit_employee" column_invisible="True"/>
                                     <field name="can_edit_first_evaluator" column_invisible="True"/>
                                     <field name="can_edit_second_evaluator" column_invisible="True"/>
                                     <field name="evaluation_state" column_invisible="True"/>
-                                    <field name="name"/>
+                                    <field name="name" readonly="1" force_save="1"/>
+                                    <field name="achievement_criteria" readonly="1" force_save="1" optional="show"/>
                                     <field name="comment_employee" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
-                                    <field name="performance_result" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" readonly="not can_edit_employee or evaluation_state != 'draft'" optional="show"/>
                                     <field name="first_evaluator_comment" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
-                                    <field name="first_evaluator_score" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" readonly="not can_edit_first_evaluator or evaluation_state != 'inprocess'" optional="show"/>
                                     <field name="comment_second_evaluator" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
-                                    <field name="second_evaluator_score" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
+                                    <field name="second_evaluator_score" decoration-danger="second_evaluator_score == 0" readonly="not can_edit_second_evaluator or evaluation_state != 'evaluated'" optional="show"/>
                                     <field name="total_score" string="Total"/>
                                 </list>
                             </field>
@@ -339,7 +431,7 @@
                                 </list>
                             </field>
                         </page> -->
-                        <page string="Attitude Evaluation">
+                        <page string="Attitude Evaluation" invisible="not show_attitude">
                             <field name="attitude_line_ids" readonly="1" force_save="1">
                                 <list editable="top">
                                     <field name="group_kpi_user" column_invisible="True"/>
@@ -371,7 +463,7 @@
                             </group>
                             <div class="clearfix"/>
                         </page>
-                        <page string="Summary" invisible="current_employee">
+                        <page string="Summary" invisible="not group_kpi_committee and (current_employee or state != '2_evaluated')">
                             <group>
                                 <group string="Indicator Weight">
                                     <field name="performance_weight" readonly="1"/>
@@ -396,6 +488,14 @@
                             </group>
                         </page>
                         <page string="Interview Performance">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Score Entry Guidelines</strong>
+                                <ul class="mb-0">
+                                    <li>Performance Results (Employee): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (First Evaluator): Enter a whole number from 1 to 5.</li>
+                                    <li>Score (Second Evaluator): Enter a whole number from 1 to 5.</li>
+                                </ul>
+                            </div>
                             <field name="interview_line_ids">
                                 <list editable="top">
                                     <field name="evaluation_state" column_invisible="True"/>
@@ -404,11 +504,11 @@
                                     <field name="achievement_criteria" optional="show"/>
                                     <field name="weight" optional="show"/>
                                     <field name="comment_employee" optional="show"/>
-                                    <field name="performance_result" optional="show"/>
+                                    <field name="performance_result" decoration-danger="performance_result == 0" optional="show"/>
                                     <field name="first_evaluator_comment" optional="show"/>
-                                    <field name="first_evaluator_score" optional="show"/>
+                                    <field name="first_evaluator_score" decoration-danger="first_evaluator_score == 0" optional="show"/>
                                     <field name="comment_second_evaluator" optional="show"/>
-                                    <field name="second_evaluator_score" optional="show"/>
+                                    <field name="second_evaluator_score" decoration-danger="second_evaluator_score == 0" optional="show"/>
                                     <field name="total_score" string="Score"/>
                                 </list>
                             </field>

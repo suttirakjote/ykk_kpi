@@ -138,7 +138,7 @@ Every evaluation line includes `Weight`, evaluator scores, and `Total`. `Total` 
 Second Evaluator Score * Weight / 100
 ```
 
-`first_evaluator_score`, `second_evaluator_score`, and `total_score` use the `KPI Score` decimal precision master data with two decimal places.
+`performance_result`, `first_evaluator_score`, and `second_evaluator_score` are integers. Existing decimal scores are converted by the database during module upgrade. `total_score` remains a float and uses the `KPI Score` decimal precision master data with two decimal places.
 
 Summary fields:
 

@@ -28,6 +28,7 @@
                 <field name="max_salary" optional="show"/>
                 <field name="group_position_id" optional="show"/>
                 <field name="evaluation_topic" optional="show"/>
+                <field name="show_attitude" optional="show"/>
                 <field name="performance_weight" optional="show"/>
                 <field name="role_based_behavior_weight" optional="show"/>
                 <field name="behavior_weight" optional="show"/>
@@ -53,6 +54,7 @@
                             <field name="code"/>
                             <field name="group_position_id" options="{'no_create': True}"/>
                             <field name="evaluation_topic" required="1"/>
+                            <field name="show_attitude"/>
                         </group>
                         <group>
                             <field name="active"/>

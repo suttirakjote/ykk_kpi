@@ -50,6 +50,12 @@ class KpiDepartmentKpi(models.Model):
         compute="_compute_tab_totals",
         store=True,
     )
+    total_performance_score = fields.Float(
+        string="Total Performance Score",
+        digits="KPI Score",
+        related="performance_tab_total",
+        readonly=True,
+    )
     role_tab_total = fields.Float(
         string="Role-based Behavior Total",
         digits="KPI Score",
@@ -96,6 +102,7 @@ class KpiDepartmentKpi(models.Model):
     overall_grade_id = fields.Many2one("ykk.kpi.grade", string="Overall Grade", compute="_compute_overall_grade")
     company_id = fields.Many2one("res.company", string="Company", required=True, default=lambda self: self.env.company)
     group_kpi_user = fields.Boolean(compute="_compute_group_kpi_user")
+    group_kpi_committee = fields.Boolean(compute="_compute_group_kpi_committee")
     can_edit_employee = fields.Boolean(compute="_compute_evaluation_permissions")
     can_edit_first_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
     can_edit_second_evaluator = fields.Boolean(compute="_compute_evaluation_permissions")
@@ -109,6 +116,7 @@ class KpiDepartmentKpi(models.Model):
 
     description = fields.Html(string='Description', sanitize_attributes=False)
     evaluation_topic = fields.Selection(related="level_id.evaluation_topic", string="Evaluation Topic")
+    show_attitude = fields.Boolean(related="level_id.show_attitude", string="Show Attitude")
 
     attitude_tab_remaining = fields.Float(
         string="Remaining Score",
@@ -126,12 +134,16 @@ class KpiDepartmentKpi(models.Model):
     @api.depends_context("uid")
     def _compute_group_kpi_user(self):
         user = self.env.user
-        readonly_user = (
-            user.has_group("ykk_kpi.group_ykk_kpi_user")
-            and not user.has_group("ykk_kpi.group_ykk_kpi_admin")
-        )
+        readonly_user = (user.has_group("ykk_kpi.group_ykk_kpi_user") and not user.has_group("ykk_kpi.group_ykk_kpi_admin"))
         for record in self:
             record.group_kpi_user = readonly_user
+    
+    @api.depends_context("uid")
+    def _compute_group_kpi_committee(self):
+        user = self.env.user
+        committee_user = (user.has_group("ykk_kpi.group_ykk_kpi_committee"))
+        for record in self:
+            record.group_kpi_committee = committee_user
 
     @api.depends("employee_id.user_id", "department_id", "company_id")
     @api.depends_context("uid")
@@ -240,64 +252,8 @@ class KpiDepartmentKpi(models.Model):
             record.period_id = annual.period_id if annual else False
             record.attitude_line_ids = attitude_line_commands
 
-    def action_send_approve(self):
-        self.ensure_one()
-        self._check_evaluation_rule()
-        rule_id = self._get_evaluation_rule()
-        if not rule_id.first_evaluator_id:
-            raise ValidationError(
-                _("Please configure the First Evaluator in the Evaluation Rule.")
-            )
-        is_kpi_admin = self.env.user.has_group("ykk_kpi.group_ykk_kpi_admin")
-        if self.employee_id.user_id != self.env.user and not is_kpi_admin:
-            raise UserError(
-                _("Only the employee or KPI Administrator can send for approval.")
-            )
-
-        activity_type = self.env.ref(
-            "ykk_kpi.mail_activity_first_evaluator_to_validate"
-        )
-        existing_activity = self.activity_ids.filtered(
-            lambda activity: activity.activity_type_id == activity_type
-            and activity.user_id == rule_id.first_evaluator_id
-        )
-        if existing_activity:
-            message = _("An approval activity has already been sent.")
-            notification_type = "warning"
-        else:
-            self.action_first_evaluate_activity()
-            message = _("The approval activity was sent successfully.")
-            notification_type = "success"
-
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Send Approve"),
-                "message": message,
-                "type": notification_type,
-                "sticky": False,
-                "next": {
-                    "type": "ir.actions.client",
-                    "tag": "soft_reload",
-                },
-            },
-        }
-
-    # 1st Evaluate
-    def action_confirm(self):
-        self._check_evaluation_rule()
-        rule_id = self._get_evaluation_rule()
-        if rule_id.first_evaluator_id != self.env.user:
-            raise UserError(_("You do not have permission as the First Evaluator."))
-        if not rule_id.second_evaluator_id:
-            raise ValidationError(_("Please configure the Second Evaluator in the Evaluation Rule."))
-        self.write({"state": "inprocess"})
-        self.activity_update()
-        self.action_second_evaluate_activity()
-
-    # 2nd Evaluate
-    def action_done(self):
+    # Check Weight
+    def _check_weight(self):
         for record in self:
             errors = []
             tabs = [(_("Performance Evaluation"), record.performance_line_ids)]
@@ -305,26 +261,83 @@ class KpiDepartmentKpi(models.Model):
                 if lines and abs(sum(lines.mapped("weight")) - 100.0) > 0.01:
                     errors.append("%s = %s%%" % (tab_name, sum(lines.mapped("weight"))))
             if errors:
-                raise ValidationError(
-                    _("Weight ต้องเท่ากับ 100%% ก่อนกด Done:\n- %s") % "\n- ".join(errors)
-                )
-        # Update State and Activity
+                raise ValidationError(_("Weight ต้องเท่ากับ 100%% ก่อนกด Done:\n- %s") % "\n- ".join(errors))
+        
+    def _check_required_scores(self, score_fields):
+        """Reject zero scores for the evaluation stages being submitted."""
+        tabs = [
+            (_("Performance Evaluation"), "performance_line_ids"),
+            (_("Role-based Behavior Evaluation"), "role_line_ids"),
+            (_("Behavior Evaluation"), "behavior_line_ids"),
+            (_("Interview Performance"), "interview_line_ids"),
+        ]
+        score_labels = {
+            "performance_result": _("Performance Results (Employee)"),
+            "first_evaluator_score": _("Score (First Evaluator)"),
+            "second_evaluator_score": _("Score (Second Evaluator)"),
+        }
+        errors = []
+        for tab_name, line_field in tabs:
+            for score_field in score_fields:
+                if any(
+                    line[score_field] == 0
+                    for record in self
+                    for line in record[line_field]
+                ):
+                    errors.append("%s: %s" % (tab_name, score_labels[score_field]))
+        if errors:
+            raise ValidationError(
+                _("Scores must not be 0 in the following pages and fields:\n- %s")
+                % "\n- ".join(errors)
+            )
+
+    # Send 1st Evaluate
+    def action_send_first_approve(self):
+        self.ensure_one()
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        if not rule_id.first_evaluator_id:
+            raise ValidationError(_("Please configure the First Evaluator in the Evaluation Rule."))
+        # Employee & Administrator
+        is_kpi_admin = self.env.user.has_group("ykk_kpi.group_ykk_kpi_admin")
+        if self.employee_id.user_id != self.env.user and not is_kpi_admin:
+            raise UserError(_("Only the employee or KPI Administrator can send for approval."))
+        self._check_required_scores(("performance_result",))
+        self.write({"state": "inprocess"})
+        self.action_first_evaluate_activity()
+
+    # Send 2st Evaluate
+    def action_send_second_approve(self):
+        self._check_evaluation_rule()
+        rule_id = self._get_evaluation_rule()
+        if rule_id.first_evaluator_id != self.env.user:
+            raise UserError(_("You do not have permission as the First Evaluator."))
+        if not rule_id.second_evaluator_id:
+            raise ValidationError(_("Please configure the Second Evaluator in the Evaluation Rule."))
+        self._check_required_scores(("performance_result", "first_evaluator_score"))
+        self._check_weight()
+        self.write({"state": "evaluated"})
+        self.activity_update()
+        self.action_second_evaluate_activity()
+    
+    def action_evaluated(self):
         self._check_evaluation_rule()
         rule_id = self._get_evaluation_rule()
         if rule_id.second_evaluator_id != self.env.user:
-            raise UserError(
-                _("You do not have permission as the Second Evaluator.")
-            )
+            raise UserError(_("You do not have permission as the Second Evaluator."))
+        self._check_required_scores(
+            ("performance_result", "first_evaluator_score", "second_evaluator_score")
+        )
+        self.write({"state": "2_evaluated"})
         self.activity_update()
-        self.write({"state": "evaluated"})
 
     # Evaluated
     def action_approve(self):
-        records_to_approve = self.filtered(lambda record: record.state == "evaluated")
+        records_to_approve = self.filtered(lambda record: record.state == "2_evaluated")
         updated_count = len(records_to_approve)
         skipped_count = len(self) - updated_count
         if records_to_approve:
-            records_to_approve.write({"state": "2_evaluated"})
+            records_to_approve.write({"state": "approved"})
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -344,10 +357,6 @@ class KpiDepartmentKpi(models.Model):
                 },
             },
         }
-
-    # Approve
-    def action_evaluated(self):
-        self.write({"state": "approved"})
 
     def action_cancel(self):
         self.write({"state": "cancel"})
@@ -404,7 +413,7 @@ class KpiDepartmentKpi(models.Model):
             date_deadline= fields.Date.today())
 
     def _get_activity_feedback(self):
-        return ['inprocess', 'evaluated']
+        return ['inprocess', 'evaluated', '2_evaluated']
 
     def _get_activity_unlink(self):
         return ['cancel']
@@ -597,11 +606,11 @@ class KpiDepartmentKpiInterviewLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Float(string="Performance Results (Employee)")
+    performance_result = fields.Integer(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
-    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
+    first_evaluator_score = fields.Integer(string="Score (First Evaluator)")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
-    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    second_evaluator_score = fields.Integer(string="Score (Second Evaluator)")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
     @api.depends("second_evaluator_score", "weight")
@@ -635,6 +644,20 @@ class KpiDepartmentKpiInterviewLine(models.Model):
                 "form_view_initial_mode": "readonly",
             },
         }
+    
+    @api.constrains(
+        "performance_result",
+        "first_evaluator_score",
+        "second_evaluator_score",
+    )
+    def _check_score_range(self):
+        for record in self:
+            if not 0 <= record.performance_result <= 5:
+                raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            if not 0 <= record.first_evaluator_score <= 5:
+                raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
+            elif not 0 <= record.second_evaluator_score <= 5:
+                raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiPerformanceLine(models.Model):
     _name = "ykk.kpi.department.kpi.performance.line"
@@ -646,11 +669,11 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Float(string="Performance Results (Employee)")
+    performance_result = fields.Integer(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
-    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
+    first_evaluator_score = fields.Integer(string="Score (First Evaluator)")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
-    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    second_evaluator_score = fields.Integer(string="Score (Second Evaluator)")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
     group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
@@ -707,11 +730,11 @@ class KpiDepartmentKpiPerformanceLine(models.Model):
     )
     def _check_score_range(self):
         for record in self:
-            if not 0.0 <= record.performance_result <= 5.0:
+            if not 0 <= record.performance_result <= 5:
                 raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            if not 0.0 <= record.first_evaluator_score <= 5.0:
+            if not 0 <= record.first_evaluator_score <= 5:
                 raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+            elif not 0 <= record.second_evaluator_score <= 5:
                 raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiRoleLine(models.Model):
@@ -724,11 +747,11 @@ class KpiDepartmentKpiRoleLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Float(string="Performance Results (Employee)")
+    performance_result = fields.Integer(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
-    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
+    first_evaluator_score = fields.Integer(string="Score (First Evaluator)")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
-    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    second_evaluator_score = fields.Integer(string="Score (Second Evaluator)")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
     group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
@@ -748,11 +771,11 @@ class KpiDepartmentKpiRoleLine(models.Model):
     )
     def _check_score_range(self):
         for record in self:
-            if not 0.0 <= record.performance_result <= 5.0:
+            if not 0 <= record.performance_result <= 5:
                 raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            if not 0.0 <= record.first_evaluator_score <= 5.0:
+            if not 0 <= record.first_evaluator_score <= 5:
                 raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+            elif not 0 <= record.second_evaluator_score <= 5:
                 raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiBehaviorLine(models.Model):
@@ -765,11 +788,11 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     achievement_criteria = fields.Text(string="Achievement Criteria")
     weight = fields.Float(string="Weight")
     comment_employee = fields.Text(string="Comment(Employee)")
-    performance_result = fields.Float(string="Performance Results (Employee)")
+    performance_result = fields.Integer(string="Performance Results (Employee)")
     first_evaluator_comment = fields.Text(string="Comments (First Evaluator)")
-    first_evaluator_score = fields.Float(string="Score (First Evaluator)", digits="KPI Score")
+    first_evaluator_score = fields.Integer(string="Score (First Evaluator)")
     comment_second_evaluator = fields.Text(string="Comment(Second Evaluator)")
-    second_evaluator_score = fields.Float(string="Score (Second Evaluator)", digits="KPI Score")
+    second_evaluator_score = fields.Integer(string="Score (Second Evaluator)")
     total_score = fields.Float(string="Total", digits="KPI Score", compute="_compute_total_score", store=True)
 
     group_kpi_user = fields.Boolean(related="department_kpi_id.group_kpi_user")
@@ -789,11 +812,11 @@ class KpiDepartmentKpiBehaviorLine(models.Model):
     )
     def _check_score_range(self):
         for record in self:
-            if not 0.0 <= record.performance_result <= 5.0:
+            if not 0 <= record.performance_result <= 5:
                 raise ValidationError(_("Performance Results (Employee) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            if not 0.0 <= record.first_evaluator_score <= 5.0:
+            if not 0 <= record.first_evaluator_score <= 5:
                 raise ValidationError(_("Score (First Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
-            elif not 0.0 <= record.second_evaluator_score <= 5.0:
+            elif not 0 <= record.second_evaluator_score <= 5:
                 raise ValidationError(_("Score (Second Evaluator) ต้องอยู่ระหว่าง 0 ถึง 5"))
 
 class KpiDepartmentKpiAttitudeLine(models.Model):
