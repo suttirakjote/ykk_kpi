@@ -252,6 +252,13 @@ class KpiDepartmentKpi(models.Model):
             record.period_id = annual.period_id if annual else False
             record.attitude_line_ids = attitude_line_commands
 
+    @api.model
+    def _cron_update_draft_from_annual(self):
+        """Refresh draft evaluations that have a KPI/Goal Setting reference."""
+        records = self.search([("state", "=", "draft"), ("annual_id", "!=", False)])
+        for record in records:
+            record.action_update_from_annual()
+
     # Check Weight
     def _check_weight(self):
         for record in self:
@@ -267,9 +274,7 @@ class KpiDepartmentKpi(models.Model):
         """Reject zero scores for the evaluation stages being submitted."""
         tabs = [
             (_("Performance Evaluation"), "performance_line_ids"),
-            (_("Role-based Behavior Evaluation"), "role_line_ids"),
-            (_("Behavior Evaluation"), "behavior_line_ids"),
-            (_("Interview Performance"), "interview_line_ids"),
+            (_("Role-based Behavior Evaluation"), "role_line_ids")
         ]
         score_labels = {
             "performance_result": _("Performance Results (Employee)"),
@@ -302,7 +307,7 @@ class KpiDepartmentKpi(models.Model):
         is_kpi_admin = self.env.user.has_group("ykk_kpi.group_ykk_kpi_admin")
         if self.employee_id.user_id != self.env.user and not is_kpi_admin:
             raise UserError(_("Only the employee or KPI Administrator can send for approval."))
-        self._check_required_scores(("performance_result",))
+        # self._check_required_scores(("performance_result",))
         self.write({"state": "inprocess"})
         self.action_first_evaluate_activity()
 
@@ -495,43 +500,30 @@ class KpiDepartmentKpi(models.Model):
                 record.period_score = float_round(score, precision_digits=2)
                 record.period_grade_id = record._find_grade_by_score(record.period_score)
 
-    def _grade_code_to_score(self, grade):
-        try:
-            return int(grade.code)
-        except (TypeError, ValueError):
-            return False
-
     @api.depends(
+        "period_score",
         "period_grade_id",
         "summary_parent_kpi_ids.parent_kpi_id",
-        "summary_parent_kpi_ids.parent_kpi_id.period_grade_id",
+        "summary_parent_kpi_ids.parent_kpi_id.period_score",
         "company_id",
     )
     def _compute_overall_grade(self):
         for record in self:
-            grades = []
-            if record.period_grade_id:
-                grades.append(record.period_grade_id)
-            grades.extend(
-                line.parent_kpi_id.period_grade_id
+            parents = [
+                line.parent_kpi_id
                 for line in record.summary_parent_kpi_ids
-                if line.parent_kpi_id.period_grade_id
-            )
-            grade_scores = [
-                score
-                for score in (record._grade_code_to_score(grade) for grade in grades)
-                if score is not False
+                if line.parent_kpi_id
             ]
-            record.overall_score = (
-                float_round(sum(grade_scores) / len(grade_scores), precision_digits=2)
-                if grade_scores
-                else 0.0
+            if not parents:
+                record.overall_score = record.period_score
+                record.overall_grade_id = record.period_grade_id
+                continue
+
+            scores = [record.period_score] + [parent.period_score for parent in parents]
+            record.overall_score = float_round(
+                sum(scores) / len(scores), precision_digits=2
             )
-            record.overall_grade_id = (
-                record._find_grade_by_score(record.overall_score)
-                if grade_scores
-                else False
-            )
+            record.overall_grade_id = record._find_grade_by_score(record.overall_score)
 
     def _compute_adjust_grade(self):
         adjustment_line_model = self.env["kpi.adjustment.line"]

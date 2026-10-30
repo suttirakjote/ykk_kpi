@@ -144,7 +144,7 @@ Summary fields:
 
 - `Period Score`: averages the totals of tabs that contain lines and rounds the result to two decimal places. `Period Grade` keeps the existing whole-number grade-code lookup behavior.
 - `Parent KPIs`: persistent summary lines using `ykk.kpi.department.kpi.summary.line`.
-- `Overall Score`: averages the numeric grade codes from the current Period Grade and all selected Parent KPI Grades and rounds the result to two decimal places. `Overall Grade` keeps the existing whole-number grade-code lookup behavior.
+- `Overall Score`: equals the current Period Score when no Parent KPI is selected. When Parent KPIs are selected, averages the current Period Score and the Period Scores of all selected Parent KPIs, rounded to two decimal places. `Overall Grade` equals the Period Grade without Parent KPIs; otherwise it uses the existing whole-number grade-code lookup behavior.
 
 Each Parent KPI can be added only once per Department KPI summary.
 

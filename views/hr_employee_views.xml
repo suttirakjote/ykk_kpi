@@ -25,7 +25,7 @@
                         <group>
                             <field name="ykk_salary_month"/>
                             <field name="ykk_kpi_level_id" options="{'no_create': True}"/>
-                            <!-- <field name="ykk_kpi_group_position_id" options="{'no_create': True}"/> -->
+                            <field name="ykk_kpi_group_position_id" options="{'no_create': True}"/>
                             <field name="ykk_kpi_employee_type"/>
                             <field name="ykk_start_work_date"/>
                             <field name="ykk_tenure"/>

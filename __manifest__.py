@@ -19,6 +19,7 @@
         "security/ir.model.access.csv",
         "data/decimal_precision_data.xml",
         "data/ir_sequence_data.xml",
+        "data/ir_cron_data.xml",
         "data/salary_calculate_data.xml",
         "data/bonus_calculate_data.xml",
         "data/report_paperformat_data.xml",

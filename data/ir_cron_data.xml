@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_refresh_draft_annual_kpi_defaults" model="ir.cron">
+            <field name="name">YKK KPI: Refresh Draft KPI/Goal Setting Defaults</field>
+            <field name="model_id" ref="model_ykk_kpi_annual_kpi"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_refresh_draft_employee_defaults()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="ir_cron_update_draft_department_kpi_from_annual" model="ir.cron">
+            <field name="name">YKK KPI: Update Draft Evaluations from KPI/Goal Setting</field>
+            <field name="model_id" ref="model_ykk_kpi_department_kpi"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_update_draft_from_annual()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="ir_cron_template_line_apply_goal_defaults" model="ir.cron">
+            <field name="name">YKK KPI: Apply Goal Defaults to Template KPI Lines</field>
+            <field name="model_id" ref="model_ykk_kpi_template_performance_line"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_apply_goal_defaults()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="False"/>
+        </record>
+    </data>
+</odoo>

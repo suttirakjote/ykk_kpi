@@ -189,6 +189,12 @@ class KpiAnnualKpi(models.Model):
             line.write({"deduction_score": -line.deduction_score})
         return result
 
+    @api.model
+    def _cron_refresh_draft_employee_defaults(self):
+        """Reload template/master defaults only for draft KPI/Goal Settings."""
+        records = self.search([("state", "=", "draft")])
+        records._onchange_employee_id()
+
     @api.onchange("employee_id", "period_id")
     def _onchange_employee_id(self):
         for record in self:
